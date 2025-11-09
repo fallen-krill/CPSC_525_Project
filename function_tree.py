@@ -1,12 +1,13 @@
 # Class function tree
 class Function_tree:
     allowed_functions = set(['cos', 'sin', 'tan'])
+    
     # Constructor is recursive. Input is a string
     def __init__(self, tokens):
          self.function = '0'
-         self.arg1 = NULL
-         self.arg2 = NULL
-         
+         self.arg1 = None
+         self.arg2 = None
+
          # Do order of operations in reverse
          # Addition or subtraction
          for i in range(len(tokens)):
@@ -14,44 +15,57 @@ class Function_tree:
                  self.function = tokens[i]
                  self.arg1 = Function_tree(tokens[0:i])
                  self.arg2 = Function_tree(tokens[i+1: len(tokens)])
+                 
+             return
+
+
+         for i in range(1, len(tokens)):
+             if tokens[i] in set("*/"):
+                 self.function = tokens[i]
+                 self.arg1 = Function_tree(tokens[0:i])
+                 self.arg2 = Function_tree(tokens[i + 1 : len(tokens)])
+
+                 return
+             
+             elif tokens[i - 1] not in allowed_functions:
+                 self.function = '*'
+                 self.arg1 = Function_tree(tokens[0:i])
+                 self.arg2 = Function_tree(tokens[i:len(tokens)])
+
                  return
 
+         # exponentiation
 
-        # multiplication and division
-        for i in range(1, len(tokens)):
-            if tokens[i] in set("*/"):
-                self.function = tokens[i]
-                self.arg1 = Function_tree(tokens[0:i])
-                self.arg2 = Function_tree(tokens[i + 1] : len(tokens))
-            if tokens[i - 1] not in allowed_functions:
-                self.function = '*'
-                self.arg1 = Function_tree(tokens[0:i])
-                self.arg2 = Function_tree(tokens[i:len(tokens)])
-            return
+         for i in range(1, len(tokens)):
+             if tokens[i] == '^':
+                 self.function = '^'
+                 self.arg1 = Function_tree(tokens[i -1])
+                 self.arg2 = Function_tree(tokens[i + 1])
+                 return
 
-        # exponentiation
-        for i in range(1, len(tokens)):
-            if tokens[i] = '^':
-                self.function = '^'
-                self.arg1 = tokens[i -1]
-                self.arg2 = tokens[i + 1]
-                return
-
-        # factorial
-        for i in range(1,len(tokens)):
-            if tokens[i] = '!':
-                self.function = '!'
-                self.arg1 = tokens[i - 1]
-                return
+         # factorial
+         for i in range(1,len(tokens)):
+             if tokens[i] == '!':
+                 self.function = '!'
+                 self.arg1 = Function_tree(tokens[i - 1])
+                 return
         
 
-        # functions
-        for i in range(len(tokens) - 1):
-            if tokens[i] in allowed_functions:
-                self.function = tokens[i]
-                self.arg1 = tokens[i + 1]
+         # functions
+         for i in range(len(tokens) - 1):
+             if tokens[i] in allowed_functions:
+                 self.function = tokens[i]
+                 self.arg1 = Function_tree(tokens[i + 1])
+                 return
 
-        # brackets
+         # brackets
+         self.function = Function_tree(tokens[0]).function
+         self.arg1 = Function_tree(tokens[0]).arg1
+         self.arg2 = Function_tree(tokens[0]).arg2
+
+         return
+    
+        
                 
     # I have no idea if this works yet
     # This only exists for testing purposes
@@ -224,7 +238,7 @@ def tokenize(input_string):
 
     while i < len(input_string):
         token = get_token(input_string, i)    
-        elif token != "":
+        if token != "":
             i += (num_consec_spaces(input_string, i) + len(token))
             if has_outer_brackets(token):
                 token = tokenize(token) #recursive call
@@ -244,6 +258,8 @@ def main():
         print(get_token(input_string, i))
 
     print(tokenize(input_string))
+
+    Function_tree(input_string)
 
     
 main()
