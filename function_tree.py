@@ -101,9 +101,7 @@ def find_matching_bracket(input_string, index):
     
 # returns a token (either a number, variable, or function name) starting at the given index
 def get_token(input_string, index):
-
     token = ""
-
     # I am aware that '.' is not a digit but I don't know what else to call this
     digits = set(['0','1','2','3','4','5','6','7','8','9','0','.'])
     
@@ -142,6 +140,39 @@ def get_token(input_string, index):
     return token
 
 
+def strip_outer_brackets(input_string):
+    if (input_string[0] == '(' and
+        find_matching_bracket(input_string, 0) == len(input_string) - 1 and
+        input_string[len(input_string) - 1] == ')'):
+        
+        return input_string[1:len(input_string) - 1]
+    else:
+        return input_string
+
+def num_consec_spaces(input_string, index):
+    result = 0
+
+    for i in range(index, len(input_string)):
+        if input_string[i] == ' ':
+            result += 1
+        else:
+            break
+    return result
+
+    
+def tokenize(input_string):
+    input_string = strip_outer_brackets(input_string)
+    tokens = []
+
+    i = 0
+
+    while i < len(input_string):
+        token = get_token(input_string, i)
+        tokens.append(token)
+        i += (num_consec_spaces(input_string, i) + len(token))
+
+    return tokens
+
 # For now, this is print debugging.
 def main():
     input_string = "10log_2x+ (302 39 4.234 .23) 4.123 .5/2343"
@@ -149,7 +180,7 @@ def main():
     for i in range(len(input_string)):
         print(get_token(input_string, i))
 
-    print(validate_input("h23 i((()uhoq83h"))
+    print(tokenize(input_string))
 
     
 main()
