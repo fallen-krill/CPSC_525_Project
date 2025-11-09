@@ -1,17 +1,58 @@
 # Class function tree
 class Function_tree:
-
+    allowed_functions = set(['cos', 'sin', 'tan'])
     # Constructor is recursive. Input is a string
-    def __init__(self, input_string):
-         self.function = NULL
+    def __init__(self, tokens):
+         self.function = '0'
          self.arg1 = NULL
          self.arg2 = NULL
-
-         # TODO: parse input string
-
-         # Do order of operations in reverse
-
          
+         # Do order of operations in reverse
+         # Addition or subtraction
+         for i in range(len(tokens)):
+             if tokens[i] in set("+-"):
+                 self.function = tokens[i]
+                 self.arg1 = Function_tree(tokens[0:i])
+                 self.arg2 = Function_tree(tokens[i+1: len(tokens)])
+                 return
+
+
+        # multiplication and division
+        for i in range(1, len(tokens)):
+            if tokens[i] in set("*/"):
+                self.function = tokens[i]
+                self.arg1 = Function_tree(tokens[0:i])
+                self.arg2 = Function_tree(tokens[i + 1] : len(tokens))
+            if tokens[i - 1] not in allowed_functions:
+                self.function = '*'
+                self.arg1 = Function_tree(tokens[0:i])
+                self.arg2 = Function_tree(tokens[i:len(tokens)])
+            return
+
+        # exponentiation
+        for i in range(1, len(tokens)):
+            if tokens[i] = '^':
+                self.function = '^'
+                self.arg1 = tokens[i -1]
+                self.arg2 = tokens[i + 1]
+                return
+
+        # factorial
+        for i in range(1,len(tokens)):
+            if tokens[i] = '!':
+                self.function = '!'
+                self.arg1 = tokens[i - 1]
+                return
+        
+
+        # functions
+        for i in range(len(tokens) - 1):
+            if tokens[i] in allowed_functions:
+                self.function = tokens[i]
+                self.arg1 = tokens[i + 1]
+
+        # brackets
+                
     # I have no idea if this works yet
     # This only exists for testing purposes
     def __str__(self):
@@ -22,6 +63,9 @@ class Function_tree:
         pass
 
 
+# dictionary for allowed functions
+# key is function, value is number of arguments it takes
+
 # Helper functions
 
 # This returning True does not mean that the syntax is correct. It only
@@ -30,6 +74,8 @@ def validate_input(input_string):
     # ensure only valid characters are in the input string
     valid_characters = set("abcdefghijklmnopqrstuvwxyz .0987654321()+-*/^!_")
     if not(set(input_string).issubset(valid_characters)):
+        return False
+    if not (input_string[0] in set("abcdefghijklmnopqrstuvwxyz. 1234567890(+/")):
         return False
     # ensure bracket depth is 0 at the end of the string
     bracket_depth = 0
@@ -113,6 +159,7 @@ def get_token(input_string, index):
     if input_string[index] == '(':
         end_index = find_matching_bracket(input_string, index)
         if end_index != -1:
+            print(input_string[index:end_index + 1])
             token = input_string[index : end_index + 1]
         else:
             token = "invalid token"
@@ -140,6 +187,15 @@ def get_token(input_string, index):
     return token
 
 
+def has_outer_brackets(input_string):
+    if (input_string[0] == '(' and
+        find_matching_bracket(input_string, 0) == len(input_string) - 1 and
+        input_string[len(input_string) - 1] == ')'):
+        return True
+    else:
+        return False
+
+    
 def strip_outer_brackets(input_string):
     if (input_string[0] == '(' and
         find_matching_bracket(input_string, 0) == len(input_string) - 1 and
@@ -167,15 +223,22 @@ def tokenize(input_string):
     i = 0
 
     while i < len(input_string):
-        token = get_token(input_string, i)
-        tokens.append(token)
-        i += (num_consec_spaces(input_string, i) + len(token))
+        token = get_token(input_string, i)    
+        elif token != "":
+            i += (num_consec_spaces(input_string, i) + len(token))
+            if has_outer_brackets(token):
+                token = tokenize(token) #recursive call
+            tokens.append(token)
+        else:
+            tokens = ["error"]
+            break
+        print(i, token)
 
     return tokens
 
 # For now, this is print debugging.
 def main():
-    input_string = "10log_2x+ (302 39 4.234 .23) 4.123 .5/2343"
+    input_string = "(10log_2x+ (302 39 4.234 .23) 4.123 .5/2343)"
 
     for i in range(len(input_string)):
         print(get_token(input_string, i))
