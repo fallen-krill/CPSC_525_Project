@@ -3,14 +3,22 @@ class Function_tree:
 
     # Dictionary with allowed funcitons and number of arguments
     allowed_functions = {
-        "cos" : 1,
         "sin" : 1,
+        "cos" : 1,
         "tan" : 1,
         "log" : 1,
-        "log_" : 2
+        "log_" : 2,
+        "ln" : 1,
+        "csc" : 1,
+        "sec" : 1,
+        "tan" : 1,
+        "asin" : 1,
+        "acos" : 1,
+        "atan" : 1,
+        "sqrt" : 1
     }
 
-    operators = set("+-*/!^")
+    operators = set("+-*/^")
 
     def __init__(self, input_string):
         """
@@ -27,10 +35,13 @@ class Function_tree:
         """
 
         # Tree data structure
-        self.function = 'error'
+        self.function = None
         self.arg1 = None
         self.arg2 = None
 
+        if validate_input(input_string) == False:
+            return
+        
         tokens = tokenize(input_string)
 
         # Do order of operations in reverse
@@ -42,7 +53,7 @@ class Function_tree:
                 self.function = tokens[i]
                 self.arg1 = Function_tree(detokenize(tokens[0:i]))
                 self.arg2 = Function_tree(detokenize(tokens[i+1: len(tokens)]))
-                 
+
                 return
 
         # multiplication and division
@@ -52,32 +63,48 @@ class Function_tree:
                 self.arg1 = Function_tree(detokenize(tokens[0:i]))
                 self.arg2 = Function_tree(detokenize(tokens[i + 1 : len(tokens)]))
                 #print("input: " + input_string + "\nfunction: " + tokens[i] + "\narg1: "+ detokenize(tokens[0:i]) + "\narg2: " + detokenize(tokens[i+1:len(tokens)]))
+
                 
                 return
-            
+
+            # for juxtaposition multiplication, ensure the current token is not an argument of a function (which can have one or two arguments)
             elif (tokens[i - 1] not in self.allowed_functions
                   and tokens[i - 1] not in self.operators and tokens[i] not in self.operators):
-                self.function = '*'
-                self.arg1 = Function_tree(detokenize(tokens[0:i]))
-                self.arg2 = Function_tree(detokenize(tokens[i:len(tokens)]))
 
-                #print(tokens[i-1], tokens[i])
-                
-                return
+                if i > 1:
+                    if tokens[i - 2] not in self.allowed_functions or self.allowed_functions[tokens[i - 2]]<2:
+                        self.function = '*'
+                        self.arg1 = Function_tree(detokenize(tokens[0:i]))
+                        self.arg2 = Function_tree(detokenize(tokens[i:len(tokens)]))
+
+                        
+                        return
+                else:
+                    self.function = '*'
+                    self.arg1 = Function_tree(detokenize(tokens[0:i]))
+                    self.arg2 = Function_tree(detokenize(tokens[i:len(tokens)]))
+
+                    
+                    return
 
         # exponentiation
         for i in range(len(tokens) - 1, 0, -1):
             if tokens[i] == '^':
+                
                 self.function = '^'
                 self.arg1 = Function_tree(detokenize(tokens[i -1]))
                 self.arg2 = Function_tree(detokenize(tokens[i + 1]))
+                
+                
                 return
 
         # factorial
         for i in range(len(tokens) - 1, 0, -1):
             if tokens[i] == '!':
                 self.function = '!'
-                self.arg1 = Function_tree(detokenize(tokens[i - 1]))
+                self.arg1 = Function_tree(tokens[i - 1])
+
+                
                 return
         
 
@@ -85,7 +112,13 @@ class Function_tree:
         for i in range(len(tokens) - 1):
             if tokens[i] in self.allowed_functions:
                 self.function = tokens[i]
-                self.arg1 = Function_tree(detokenize(tokens[i + 1]))
+                num_args = self.allowed_functions[tokens[i]]
+                if num_args >= 1:
+                    self.arg1 = Function_tree(tokens[i + 1])
+                if num_args >= 2:
+                    if i < len(tokens) - 2:
+                        self.arg2 = Function_tree(tokens[i + 2])
+
                 return
 
         # Brackets
@@ -97,35 +130,46 @@ class Function_tree:
                 self.arg1 = Function_tree(tokens[0]).arg1
                 self.arg2 = Function_tree(tokens[0]).arg2
 
+                
+                return
+
             else:
                 self.function = tokens[0]
                 self.arg1 = None
                 self.arg2 = None
-                
+
+       
+            
         # This should only be reached in a base case. TODO: Add checks
+        
         return
                 
-    # I have no idea if this works yet
-    # This only exists for testing purposes
     def __str__(self):
+        """
+        Returns a string with the order of evaluation given by round brackets
+        """
         if self.arg1 != None and self.arg2 != None and self.function != None:
             return self.function + "(" + str(self.arg1) + "," + str(self.arg2) + ")"
-        elif self.arg1 != None:
+        elif self.function != None and self.arg1 != None:
             return self.function + "(" + str(self.arg1) + ")"
-        else:
+        elif self.function != None:
             return self.function
+        else:
+            return "error"
 
-    
+        
     def evaluate(self, x):
         pass
 
 
-    # Helper functions
+# Helper functions
 
 def validate_input(input_string):
     """
-    This returning True does not mean that the syntax is correct. It only
-    checks brackets and characters used
+    This returning True does not mean that the syntax is correct.
+    This function checks
+     - bracket depth
+     - allowed characters
     """
 
     # ensure only valid characters are in the input string
@@ -161,13 +205,15 @@ def get_keyword(input_string, index):
     keyword = ""
 
     # entire alphabet except x, y, and z
-    valid_letters = set(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '_'])
+    valid_letters = set(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'])
 
     # check each letter starting at input_string[index]
     for i in range(index, len(input_string)):
         if input_string[i] in valid_letters:
             keyword += input_string[i]
         else:
+            if input_string[i] == '_': #underscore can only be at the end of a function.
+                keyword += input_string[i]
             break
 
     return keyword
@@ -238,7 +284,6 @@ def get_token(input_string, index):
     if input_string[index] == '(':
         end_index = find_matching_bracket(input_string, index)
         if end_index != -1:
-            #print(input_string[index:end_index + 1])
             token = input_string[index : end_index + 1]
         else:
             token = "invalid token"
@@ -376,14 +421,13 @@ def main():
         
         print("f(x) = " + input_string)
 
-        print("Tokens:" + str(tokenize(input_string)))
-        print("Detokenized: \"" + detokenize(tokenize(input_string)) + "\"")
+        #print("Tokens:" + str(tokenize(input_string)))
+        #print("Detokenized: \"" + detokenize(tokenize(input_string)) + "\"")
 
-        print("\n")
-        print(Function_tree(input_string))
-        print("\n")
+        print("Function tree: " + str(Function_tree(input_string)))
 
         input_string = input("f(x) = ")
+
 
     
 main()
