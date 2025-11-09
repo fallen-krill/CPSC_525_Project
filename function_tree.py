@@ -9,7 +9,8 @@ class Function_tree:
         "log" : 1,
         "log_" : 2
     }
-    
+
+    operators = set("+-*/!^")
 
     def __init__(self, input_string):
         """
@@ -26,7 +27,7 @@ class Function_tree:
         """
 
         # Tree data structure
-        self.function = '0'
+        self.function = 'error'
         self.arg1 = None
         self.arg2 = None
 
@@ -50,13 +51,17 @@ class Function_tree:
                 self.function = tokens[i]
                 self.arg1 = Function_tree(detokenize(tokens[0:i]))
                 self.arg2 = Function_tree(detokenize(tokens[i + 1 : len(tokens)]))
+                #print("input: " + input_string + "\nfunction: " + tokens[i] + "\narg1: "+ detokenize(tokens[0:i]) + "\narg2: " + detokenize(tokens[i+1:len(tokens)]))
                 
                 return
             
-            elif tokens[i - 1] not in self.allowed_functions:
+            elif (tokens[i - 1] not in self.allowed_functions
+                  and tokens[i - 1] not in self.operators and tokens[i] not in self.operators):
                 self.function = '*'
                 self.arg1 = Function_tree(detokenize(tokens[0:i]))
                 self.arg2 = Function_tree(detokenize(tokens[i:len(tokens)]))
+
+                #print(tokens[i-1], tokens[i])
                 
                 return
 
@@ -85,11 +90,18 @@ class Function_tree:
 
         # Brackets
         # This only applies if there are nested brackets
-        if (len(tokens) == 1 and has_outer_brackets(tokens[0])):
-            self.function = Function_tree(tokens[0]).function
-            self.arg1 = Function_tree(tokens[0]).arg1
-            self.arg2 = Function_tree(tokens[0]).arg2
+        if (len(tokens) == 1):
+        
+            if (has_outer_brackets(tokens[0])):
+                self.function = Function_tree(tokens[0]).function
+                self.arg1 = Function_tree(tokens[0]).arg1
+                self.arg2 = Function_tree(tokens[0]).arg2
 
+            else:
+                self.function = tokens[0]
+                self.arg1 = None
+                self.arg2 = None
+                
         # This should only be reached in a base case. TODO: Add checks
         return
                 
@@ -97,7 +109,9 @@ class Function_tree:
     # This only exists for testing purposes
     def __str__(self):
         if self.arg1 != None and self.arg2 != None and self.function != None:
-            return str(self.function) + "(" + str(self.arg1) + "," + str(self.arg2) + ")"
+            return self.function + "(" + str(self.arg1) + "," + str(self.arg2) + ")"
+        elif self.arg1 != None:
+            return self.function + "(" + str(self.arg1) + ")"
         else:
             return self.function
 
@@ -243,7 +257,8 @@ def get_token(input_string, index):
 
     # The token is determined by what is after the space
     elif input_string[index] == ' ':
-        token = get_token(input_string, index + 1) # recursive call
+        if index + 1 < len(input_string): # this should always be true and I will probably delete later
+            token = get_token(input_string, index + 1) # recursive call
 
     # The token is the operator
     elif input_string[index] in set("+-*/^!"):
@@ -312,16 +327,17 @@ def tokenize(input_string):
      - an expression enclosed in round brackets.
     """
 
-    # Start by stripping outer bracks if they are present.
+    # Start by stripping outer brackets and whitespace if they are present.
+    input_string = input_string.strip(" ")
     input_string = strip_outer_brackets(input_string)
-
+    input_string = input_string.strip(" ")
     # Initialize to empty list.
     tokens = []
 
     i = 0
-
+    
     while i < len(input_string):
-        token = get_token(input_string, i)    
+        token = get_token(input_string, i)
         if token != "":
             i += (num_consec_spaces(input_string, i) + len(token))
 
@@ -345,24 +361,29 @@ def detokenize(tokens):
     input_string = ""
 
     for i in range(len(tokens)):
-        input_string += (tokens[i])
-        if i != len(tokens) - 1:
-            input_string += " "
+        input_string += (tokens[i] + " ")
 
-    return input_string
+    return input_string.strip(" ")
 
     
 # For now, this is print debugging.
 def main():
-    input_string = "(10log_2x+ (302 39 4.234 .23) 4.123 .5/2343)"
+    input_string = "(10log x+ (302 39 4.234 .23) 4.123 .5/2343)"
 
-    for i in range(len(input_string)):
-        print(get_token(input_string, i))
+    input_string = input("f(x) = ")
 
-    print(tokenize(input_string))
+    while input_string != "":
+        
+        print("f(x) = " + input_string)
 
-    print("\n")
-    print(Function_tree(input_string))
+        print("Tokens:" + str(tokenize(input_string)))
+        print("Detokenized: \"" + detokenize(tokenize(input_string)) + "\"")
+
+        print("\n")
+        print(Function_tree(input_string))
+        print("\n")
+
+        input_string = input("f(x) = ")
 
     
 main()
