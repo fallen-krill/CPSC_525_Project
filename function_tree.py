@@ -16,9 +16,9 @@ class Function_tree:
                  self.arg1 = Function_tree(tokens[0:i])
                  self.arg2 = Function_tree(tokens[i+1: len(tokens)])
                  
-             return
+                 return
 
-
+         # multiplication
          for i in range(1, len(tokens)):
              if tokens[i] in set("*/"):
                  self.function = tokens[i]
@@ -27,7 +27,7 @@ class Function_tree:
 
                  return
              
-             elif tokens[i - 1] not in allowed_functions:
+             elif tokens[i - 1] not in self.allowed_functions:
                  self.function = '*'
                  self.arg1 = Function_tree(tokens[0:i])
                  self.arg2 = Function_tree(tokens[i:len(tokens)])
@@ -53,15 +53,14 @@ class Function_tree:
 
          # functions
          for i in range(len(tokens) - 1):
-             if tokens[i] in allowed_functions:
+             if tokens[i] in self.allowed_functions:
                  self.function = tokens[i]
                  self.arg1 = Function_tree(tokens[i + 1])
                  return
 
          # brackets
-         self.function = Function_tree(tokens[0]).function
-         self.arg1 = Function_tree(tokens[0]).arg1
-         self.arg2 = Function_tree(tokens[0]).arg2
+         #self.arg1 = Function_tree(tokens[0]).arg1
+         #self.arg2 = Function_tree(tokens[0]).arg2
 
          return
     
@@ -70,7 +69,10 @@ class Function_tree:
     # I have no idea if this works yet
     # This only exists for testing purposes
     def __str__(self):
-        return function + "(" + arg1 + "," + arg2 + ")"
+        if self.arg1 != None and self.arg2 != None and self.function != None:
+            return self.function + "(" + self.arg1 + "," + self.arg2 + ")"
+        else:
+            return self.function
 
     
     def evaluate(self, x):
@@ -173,7 +175,7 @@ def get_token(input_string, index):
     if input_string[index] == '(':
         end_index = find_matching_bracket(input_string, index)
         if end_index != -1:
-            print(input_string[index:end_index + 1])
+            #print(input_string[index:end_index + 1])
             token = input_string[index : end_index + 1]
         else:
             token = "invalid token"
@@ -246,7 +248,7 @@ def tokenize(input_string):
         else:
             tokens = ["error"]
             break
-        print(i, token)
+        #print(i, token)
 
     return tokens
 
@@ -259,7 +261,8 @@ def main():
 
     print(tokenize(input_string))
 
-    Function_tree(input_string)
+    print("\n")
+    print(Function_tree(tokenize(input_string)))
 
     
 main()
