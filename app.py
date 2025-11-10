@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtCore import (
-    QPoint, QRect, Slot
+    QPoint, QRect, Slot, Qt
 )
 from PySide6.QtGui import (
     QPixmap, QTransform, QAction, QColor
@@ -8,10 +8,10 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QWidget, QMainWindow, QApplication, QHBoxLayout, QSplitter, QTableWidget, 
     QTableWidgetItem, QHeaderView, QGraphicsView, QGraphicsScene, QMenuBar, 
-    QFileDialog
+    QFileDialog, QTabWidget
     )
 
-class Widget(QWidget):
+class EquationsWidget(QWidget):
     def __init__(self):
         super().__init__()
 
@@ -61,8 +61,32 @@ class Widget(QWidget):
         self.img = image
         self.scene.addPixmap(self.img)
 
+class TabContainerWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.tabs = QTabWidget(self)
+        self.tabs.addTab(EquationsWidget(), "Main")
+        self.tabs.setDocumentMode(True)
+        self.tabs.setMovable(True)
+        self.tabs.setTabsClosable(True)
+
+        self.tabs.tabCloseRequested.connect(self.close_page)
+
+        self.layout = QHBoxLayout(self)
+        self.layout.addWidget(self.tabs)
+
+    @Slot()
+    def close_page(self, index: int):
+        self.tabs.removeTab(index)
+
+    @Slot()
+    def add_page(self):
+        self.tabs.addTab(EquationsWidget(), f"Page {self.tabs.count()+1}")
+        self.tabs.setCurrentIndex(self.tabs.count()-1)
+
 class MainWindow(QMainWindow):
-    def __init__(self, widget):
+    def __init__(self, widget: TabContainerWidget):
         super().__init__()
         self.setWindowTitle("Name")
 
@@ -73,12 +97,16 @@ class MainWindow(QMainWindow):
         saveAction = QAction("Save", self)
         saveAction.triggered.connect(self.save_file)
 
+        newPageAction = QAction("New Page", self)
+        newPageAction.triggered.connect(widget.add_page)
+
         # creating menu bar
         menu = self.menuBar()
 
         fileMenu = menu.addMenu("File")
         fileMenu.addAction(openAction)
         fileMenu.addAction(saveAction)
+        fileMenu.addAction(newPageAction)
 
         self.mainContent = widget
         self.setCentralWidget(widget)
@@ -103,7 +131,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    widget = Widget()
+    widget = TabContainerWidget()
     window = MainWindow(widget)
     window.resize(1000,600)
     window.show()
