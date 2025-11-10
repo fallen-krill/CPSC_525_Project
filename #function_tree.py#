@@ -606,7 +606,6 @@ def main():
     
     while input_string != "":
 
-
         # print("Tokens: ",tokenize(input_string))
         # print("Group factorials: ",group_factorials(tokenize(input_string)))
         # print("Group factorials and exponents", group_exp_fact(tokenize(input_string)))
