@@ -47,7 +47,7 @@ class Function_tree:
             return
         
         tokens = tokenize(input_string)
-
+        
         # Do order of operations in reverse:
 
         # Addition and subtraction
@@ -60,67 +60,65 @@ class Function_tree:
                 return
 
         # multiplication and division
+
+        # anything that isn't multiplied together should be a single token
+        tokens = group_exp_fact(group_func_args(tokenize(input_string), self.allowed_functions))
+        
         for i in range(len(tokens)-1, 0, -1):
+
             if tokens[i] in set("*/"):
-                self.function = tokens[i]
+                self.function = tokens[i][0]
                 self.arg1 = Function_tree(detokenize(tokens[0:i]))
                 self.arg2 = Function_tree(detokenize(tokens[i + 1 : len(tokens)]))
                 
                 return
+            
+            else:
+                self.function = '*'
+                self.arg1 = Function_tree(detokenize(tokens[0:i]))
+                self.arg2 = Function_tree(detokenize(tokens[i : len(tokens)]))
+                return
 
-            # for juxtaposition multiplication, ensure the current token is not an
-            # argument of a function (which can have one or two arguments)
-            elif (tokens[i - 1] not in self.allowed_functions
-                  and tokens[i - 1] not in self.operators and tokens[i] not in self.operators):
 
-                if i > 1:
-                    if tokens[i - 2] not in self.allowed_functions or self.allowed_functions[tokens[i - 2]]<2:
-                        self.function = '*'
-                        self.arg1 = Function_tree(detokenize(tokens[0:i]))
-                        self.arg2 = Function_tree(detokenize(tokens[i:len(tokens)]))
-
-                        return
-                else:
-                    self.function = '*'
-                    self.arg1 = Function_tree(detokenize(tokens[0:i]))
-                    self.arg2 = Function_tree(detokenize(tokens[i:len(tokens)]))
-
-                    return
-
-        # exponentiation and factorial are not detokenized since detokenize
-        # takes a list and this constructor takes a string
         
         # exponentiation
+
+        # functions and thier arguments should be a single token
+        tokens = group_func_args(tokenize(input_string), self.allowed_functions)
         for i in range(len(tokens) - 1, 0, -1):
-            if tokens[i] == '^':
-                
+            if tokens[i] == "^":
                 self.function = '^'
-                self.arg1 = Function_tree(tokens[i - 1])
-                self.arg2 = Function_tree(tokens[i + 1])
+                self.arg1 = Function_tree(detokenize(tokens[0:i]))
+                self.arg2 = Function_tree(detokenize(tokens[i+ 1: len(tokens)]))
                 
                 return
 
-        # factorial
-        for i in range(len(tokens) - 1, 0, -1):
-            if tokens[i] == '!':
-                self.function = '!'
-                self.arg1 = Function_tree(tokens[i - 1])
-                
-                return
-        
+        # note that in here, functions are evaluated starting from the right, so iterating forward
+        tokens = group_factorials(tokenize(input_string))
         # functions
         for i in range(len(tokens) - 1):
             if tokens[i] in self.allowed_functions:
-                self.function = tokens[i]
                 num_args = self.allowed_functions[tokens[i]]
-                if num_args >= 1:
-                    self.arg1 = Function_tree(tokens[i + 1])
-                if num_args >= 2:
+                self.function = tokens[i]
+                if num_args == 1:
+                    self.arg1 = Function_tree(detokenize(tokens[i+1: len(tokens)]))
+                elif num_args == 2:
                     if i < len(tokens) - 2:
-                        self.arg2 = Function_tree(tokens[i + 2])
+                        self.arg1 = Function_tree(tokens[i + 1])
+                        self.arg2 = Function_tree(detokenize(tokens[i+2: len(tokens)]))
 
                 return
 
+
+        # factorial
+
+        # No longer want tokens grouped together
+        tokens = tokenize(input_string)
+
+        if tokens[len(tokens) - 1] == "!": # all multiplication and function evaluation is done at this point
+            self.function = '!'
+            self.arg1 = Function_tree(detokenize(tokens[0: len(tokens) - 1]))
+            
         # Brackets
         # This only applies if there are nested brackets
         if (len(tokens) == 1):
@@ -170,10 +168,14 @@ def validate_input(input_string):
     """
     This returning True does not mean that the syntax is correct.
     This function checks
+     - nonempty
      - bracket depth
      - allowed characters
     """
 
+    if len(input_string) == 0:
+        return False
+    
     # ensure only valid characters are in the input string
     valid_characters = set("abcdefghijklmnopqrstuvwxyz .0987654321()+-*/^!_")
     if not(set(input_string).issubset(valid_characters)):
@@ -344,6 +346,23 @@ def strip_outer_brackets(input_string):
     return input_string
 
 
+def num_consec_factorial(tokens, index):
+    """
+    tokens -> [str]
+    index -> int
+    This returns the number of consecutive "!" symbols in tokens that end with tokens[index]
+    """
+
+    result = 0
+    for i in range(index, -1, -1):
+        if tokens[i] == "!":
+            result += 1
+        else:
+            break
+
+    return result
+
+
 def num_consec_spaces(input_string, index):
     """
     input_string -> str
@@ -397,12 +416,80 @@ def tokenize(input_string):
     return tokens
 
 
+def group_factorials(tokens):
+    """
+    tokens -> str
+
+    combines tokens that are part of an expression consisting only of
+    factorials into a single token, and returns the new tokens.
+    """
+    
+    new_tokens = [tokens[0]]
+    for i in range(1,len(tokens)):
+        if tokens[i] == "!":
+            new_tokens[len(new_tokens) - 1] += tokens[i]
+        else:
+            new_tokens.append(tokens[i])
+
+    return new_tokens
+
+
+def group_exp_fact(tokens):
+    """
+    tokens -> str
+
+    combines tokens that are part of an expression consisting only of exponentiation
+    and factorials into a single token, and returns the new tokens.
+    """
+    
+    new_tokens = [tokens[0]]
+    for i in range(1, len(tokens)):
+        if tokens[i] == "!" or tokens[i] == "^" or tokens[i-1] == "^":
+            new_tokens[len(new_tokens)-1] += tokens[i]
+        else:
+            new_tokens.append(tokens[i])
+    return new_tokens
+
+
+def group_func_args(tokens, allowed_functions):
+    """
+    tokens -> [str]
+    allowed_functions -> dict
+
+    combines tokens corresponding to a function and its arguments into one token,
+    and returns the new tokens.
+    """
+    
+    tokens = group_factorials(tokens)
+    new_tokens = [tokens[0]]
+    for i in range(1, len(tokens)):
+        
+        if tokens[i - 1] in allowed_functions:
+            new_tokens[len(new_tokens) - 1] += " " + tokens[i]
+        elif i > 1:
+            
+            if tokens[i-2] in allowed_functions: # If the function takes 2 arguments
+                if allowed_functions[tokens[i - 2]] == 2:
+                    new_tokens[len(new_tokens) - 1] += " " + tokens[i]
+
+        # If none of the above conditions fulfiled, token doesn't get combined to the previous token.
+                else:
+                    new_tokens.append(tokens[i])
+            else:
+                new_tokens.append(tokens[i])
+        else:
+            new_tokens.append(tokens[i])
+            
+    return new_tokens
+
+
 def detokenize(tokens):
     """
     tokens -> [str]
 
     Returns a string that consists of each token separated by a space.
     This is so that passing input to the function looks cleaner and maybe makes it slower.
+    It probably won't matter since the size of the string is pretty small.
     """
 
     input_string = ""
@@ -424,8 +511,12 @@ def main():
     
     while input_string != "":
         i+=1
-        print("Function tree: " + str(Function_tree(input_string)))
 
+        # print("Tokens: ",tokenize(input_string))
+        # print("Group factorials: ",group_factorials(tokenize(input_string)))
+        # print("Group factorials and exponents", group_exp_fact(tokenize(input_string)))
+        # print("Group functions: ",group_func_args(tokenize(input_string), Function_tree.allowed_functions))
+        print("\nFunction tree: ", str(Function_tree(input_string))+ "\n\n")
         input_string = input("f"+str(i)+"(x) = ")
 
     
