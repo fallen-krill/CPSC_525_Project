@@ -1,6 +1,8 @@
 # Class function tree
 class Function_tree:
 
+    operators = set("+-*/^")
+        
     # Dictionary with allowed funcitons and number of arguments
     allowed_functions = {
         "sin" : 1,
@@ -17,8 +19,6 @@ class Function_tree:
         "atan" : 1,
         "sqrt" : 1
     }
-
-    operators = set("+-*/^")
 
     def __init__(self, input_string):
         """
@@ -39,14 +39,14 @@ class Function_tree:
         self.arg1 = None
         self.arg2 = None
 
+        # Ensure string is made of valid characters and all round brackets match.
         if validate_input(input_string) == False:
             return
         
         tokens = tokenize(input_string)
 
-        # Do order of operations in reverse
+        # Do order of operations in reverse:
 
-         
         # Addition and subtraction
         for i in range(len(tokens)-1, -1, -1):
             if tokens[i] in set("+-"):
@@ -63,7 +63,6 @@ class Function_tree:
                 self.arg1 = Function_tree(detokenize(tokens[0:i]))
                 self.arg2 = Function_tree(detokenize(tokens[i + 1 : len(tokens)]))
                 #print("input: " + input_string + "\nfunction: " + tokens[i] + "\narg1: "+ detokenize(tokens[0:i]) + "\narg2: " + detokenize(tokens[i+1:len(tokens)]))
-
                 
                 return
 
@@ -77,14 +76,12 @@ class Function_tree:
                         self.arg1 = Function_tree(detokenize(tokens[0:i]))
                         self.arg2 = Function_tree(detokenize(tokens[i:len(tokens)]))
 
-                        
                         return
                 else:
                     self.function = '*'
                     self.arg1 = Function_tree(detokenize(tokens[0:i]))
                     self.arg2 = Function_tree(detokenize(tokens[i:len(tokens)]))
 
-                    
                     return
 
         # exponentiation
@@ -92,9 +89,8 @@ class Function_tree:
             if tokens[i] == '^':
                 
                 self.function = '^'
-                self.arg1 = Function_tree(detokenize(tokens[i -1]))
-                self.arg2 = Function_tree(detokenize(tokens[i + 1]))
-                
+                self.arg1 = Function_tree(tokens[i -1])
+                self.arg2 = Function_tree(tokens[i + 1])
                 
                 return
 
@@ -103,11 +99,9 @@ class Function_tree:
             if tokens[i] == '!':
                 self.function = '!'
                 self.arg1 = Function_tree(tokens[i - 1])
-
                 
                 return
         
-
         # functions
         for i in range(len(tokens) - 1):
             if tokens[i] in self.allowed_functions:
@@ -130,18 +124,14 @@ class Function_tree:
                 self.arg1 = Function_tree(tokens[0]).arg1
                 self.arg2 = Function_tree(tokens[0]).arg2
 
-                
                 return
 
             else:
                 self.function = tokens[0]
                 self.arg1 = None
                 self.arg2 = None
-
-       
-            
-        # This should only be reached in a base case. TODO: Add checks
-        
+ 
+        # This should only be reached in a base case. TODO: Add checks     
         return
                 
     def __str__(self):
