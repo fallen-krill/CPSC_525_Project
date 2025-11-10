@@ -1,9 +1,11 @@
-# Class function tree
 class Function_tree:
 
-    operators = set("+-*/^")
-        
-    # Dictionary with allowed funcitons and number of arguments
+    operators = set("+-*/^") # set of all infix operators.
+
+    """
+    Dictionary with allowed funcitons and number of arguments. Any string of letters not in
+    this dictionary is treated as a constant. Undefined constants will give an error in the evaluation stage.
+    """
     allowed_functions = {
         "sin" : 1,
         "cos" : 1,
@@ -19,6 +21,7 @@ class Function_tree:
         "atan" : 1,
         "sqrt" : 1
     }
+    
 
     def __init__(self, input_string):
         """
@@ -62,11 +65,11 @@ class Function_tree:
                 self.function = tokens[i]
                 self.arg1 = Function_tree(detokenize(tokens[0:i]))
                 self.arg2 = Function_tree(detokenize(tokens[i + 1 : len(tokens)]))
-                #print("input: " + input_string + "\nfunction: " + tokens[i] + "\narg1: "+ detokenize(tokens[0:i]) + "\narg2: " + detokenize(tokens[i+1:len(tokens)]))
                 
                 return
 
-            # for juxtaposition multiplication, ensure the current token is not an argument of a function (which can have one or two arguments)
+            # for juxtaposition multiplication, ensure the current token is not an
+            # argument of a function (which can have one or two arguments)
             elif (tokens[i - 1] not in self.allowed_functions
                   and tokens[i - 1] not in self.operators and tokens[i] not in self.operators):
 
@@ -84,12 +87,15 @@ class Function_tree:
 
                     return
 
+        # exponentiation and factorial are not detokenized since detokenize
+        # takes a list and this constructor takes a string
+        
         # exponentiation
         for i in range(len(tokens) - 1, 0, -1):
             if tokens[i] == '^':
                 
                 self.function = '^'
-                self.arg1 = Function_tree(tokens[i -1])
+                self.arg1 = Function_tree(tokens[i - 1])
                 self.arg2 = Function_tree(tokens[i + 1])
                 
                 return
@@ -133,7 +139,8 @@ class Function_tree:
  
         # This should only be reached in a base case. TODO: Add checks     
         return
-                
+
+         
     def __str__(self):
         """
         Returns a string with the order of evaluation given by round brackets
@@ -147,8 +154,13 @@ class Function_tree:
         else:
             return "error"
 
-        
+    #TODO    
     def evaluate(self, x):
+        """
+        x -> double
+        Evaluates the function at a given x.
+        If time, add support for y and z.
+        """
         pass
 
 
@@ -209,7 +221,6 @@ def get_keyword(input_string, index):
     return keyword
 
 
-
 def get_number(input_string, index):
     """get the entire number as a string"""
     number = ''
@@ -224,7 +235,6 @@ def get_number(input_string, index):
         else:
             break
     return number
-
 
 
 def find_matching_bracket(input_string, index):
@@ -333,6 +343,7 @@ def strip_outer_brackets(input_string):
             return input_string
     return input_string
 
+
 def num_consec_spaces(input_string, index):
     """
     input_string -> str
@@ -385,6 +396,7 @@ def tokenize(input_string):
 
     return tokens
 
+
 def detokenize(tokens):
     """
     tokens -> [str]
@@ -401,23 +413,20 @@ def detokenize(tokens):
     return input_string.strip(" ")
 
     
-# For now, this is print debugging.
+# For now, this is print debugging. You can test out expressions in stdin.
 def main():
-    input_string = "(10log x+ (302 39 4.234 .23) 4.123 .5/2343)"
+    #input_string = "(10log x+ (302 39 4.234 .23) 4.123 .5/2343)"
 
-    input_string = input("f(x) = ")
+    print("To exit, press ENTER without typing in a function.\n")
 
+    i = 1
+    input_string = input("f"+str(i)+"(x) = ")
+    
     while input_string != "":
-        
-        print("f(x) = " + input_string)
-
-        #print("Tokens:" + str(tokenize(input_string)))
-        #print("Detokenized: \"" + detokenize(tokenize(input_string)) + "\"")
-
+        i+=1
         print("Function tree: " + str(Function_tree(input_string)))
 
-        input_string = input("f(x) = ")
-
+        input_string = input("f"+str(i)+"(x) = ")
 
     
 main()
