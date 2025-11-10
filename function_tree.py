@@ -1,6 +1,5 @@
+import math
 class Function_tree:
-
-    operators = set("+-*/^") # set of all infix operators.
 
     """
     Dictionary with allowed funcitons and number of arguments. Any string of letters not in
@@ -15,13 +14,21 @@ class Function_tree:
         "ln" : 1,
         "csc" : 1,
         "sec" : 1,
-        "tan" : 1,
+        "cot" : 1,
         "asin" : 1,
         "acos" : 1,
         "atan" : 1,
         "sqrt" : 1
     }
-    
+
+    """
+    Dictionary with a few constants. In theory, we can add functionality later for users
+    to define their own constants and add them in here.
+    """
+    allowed_constants = {
+        "e" : 2.718281828459045235360287471352,
+        "pi":3.141592653589323846264
+    }
 
     def __init__(self, input_string):
         """
@@ -134,8 +141,14 @@ class Function_tree:
                 self.function = tokens[0]
                 self.arg1 = None
                 self.arg2 = None
- 
-        # This should only be reached in a base case. TODO: Add checks     
+
+                if (self.function not in set("+-*/^!") and not is_number(self.function)
+                    and not self.function in self.allowed_constants and self.function not in set("xyz")):
+                    raise ValueError("bad input")
+
+                return
+            
+        # This should never be reached   
         return
 
          
@@ -151,15 +164,70 @@ class Function_tree:
             return self.function
         else:
             return "error"
-
-    #TODO    
+  
     def evaluate(self, x):
         """
         x -> double
         Evaluates the function at a given x.
         If time, add support for y and z.
+
+        Zero division errors and domain errors and stuff like that should be handled by graphics.
+        Simply don't graph x at such points.
         """
-        pass
+
+        if self.arg1 == None and self.arg2 == None:
+            if is_number(self.function):
+                return float(self.function)
+            elif self.function in self.allowed_constants:
+                return self.allowed_constants[self.function]
+            elif self.function == 'x':
+                return x
+            else:
+                raise ValueError(self.function+" is not defined.")
+
+        match self.function:
+            case '+':
+                return self.arg1.evaluate(x) + self.arg2.evaluate(x)
+            case '-':
+                return self.arg1.evaluate(x) - self.arg2.evaluate(x)
+            case '*':
+                return self.arg1.evaluate(x) * self.arg2.evaluate(x)
+            case '/':
+                return self.arg1.evaluate(x) / self.arg2.evaluate(x)
+            case '^':
+                return self.arg1.evaluate(x) ** self.arg2.evaluate(x)
+            case '!':
+                return math.factorial(self.arg1.evaluate(x))
+            case "sin":
+                return math.sin(self.arg1.evaluate(x))
+            case "cos":
+                return math.cos(self.arg1.evaluate(x))
+            case "tan":
+                return math.tan(self.arg1.evaluate(x))
+            case "csc":
+                return 1.0/math.sin(self.arg1.evaluate(x))
+            case "sec":
+                return 1.0/math.cos(self.arg1.evaluate(x))
+            case "cot":
+                return 1.0/math.tan(self.arg1.evaluate(x))
+            case "asin":
+                return math.asin(self.arg1.evaluate(x))
+            case "acos":
+                return math.acos(self.arg1.evaluate(x))
+            case "atan":
+                return math.atan(self.arg1.evaluate(x))
+            case "log":
+                return math.log10(self.arg1.evaluate(x))
+            case "log_":
+                return math.log(self.arg2.evaluate(x), self.arg1.evaluate(x))
+            case "ln":
+                return math.log(2.718281828459045235360287471352, self.arg1.evaluate(x))
+            case "sqrt":
+                return math.sqrt(self.arg1.evaluate(x))
+            case _:
+                raise ValueError(self.function+" is not defined.")
+            
+        return 0
 
 
 # Helper functions
@@ -225,6 +293,7 @@ def get_keyword(input_string, index):
 
 def get_number(input_string, index):
     """get the entire number as a string"""
+    
     number = ''
 
     valid_digits = set("0987654321.")
@@ -237,6 +306,18 @@ def get_number(input_string, index):
         else:
             break
     return number
+
+
+def is_number(input_string):
+    for i in range(len(input_string)):
+        valid_digits = set("0987654321.")
+        if input_string[i] in valid_digits:
+            if input_string[i] == '.':
+                valid_digits = set("0123456789") # future decimal places treated as new number
+        else:
+            return False
+        
+    return True
 
 
 def find_matching_bracket(input_string, index):
@@ -510,13 +591,30 @@ def main():
     input_string = input("f"+str(i)+"(x) = ")
     
     while input_string != "":
-        i+=1
+
 
         # print("Tokens: ",tokenize(input_string))
         # print("Group factorials: ",group_factorials(tokenize(input_string)))
         # print("Group factorials and exponents", group_exp_fact(tokenize(input_string)))
-        # print("Group functions: ",group_func_args(tokenize(input_string), Function_tree.allowed_functions))
-        print("\nFunction tree: ", str(Function_tree(input_string))+ "\n\n")
+        # print("Group functions: ",group_func_args(tokenize(input_string), Function_tree.allowed_functions)
+        try:
+            print("\nFunction tree: ", str(Function_tree(input_string)))
+            
+
+            step = 0.5
+            for x in range(-20, 21):
+                try:
+                    print("f"+str(i)+"("+str(step*x)+") = ",Function_tree(input_string).evaluate(step*x))
+                except (ZeroDivisionError):
+                    print("not defined at x=", step*x)
+                except ValueError as e:
+                    print(e)
+        except BaseException as e:
+            print(e)
+            
+        print("\n\n")
+        
+        i+=1
         input_string = input("f"+str(i)+"(x) = ")
 
     
