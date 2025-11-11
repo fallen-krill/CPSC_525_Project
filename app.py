@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtCore import (
-    QPoint, QRect, Slot, Qt
+    QPoint, QRect, Slot, Qt, QSize
 )
 from PySide6.QtGui import (
     QPixmap, QTransform, QAction, QColor
@@ -8,7 +8,8 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QWidget, QMainWindow, QApplication, QHBoxLayout, QVBoxLayout, QSplitter, 
     QTableWidget, QTableWidgetItem, QHeaderView, QGraphicsView, QGraphicsScene, 
-    QMenuBar, QFileDialog, QTabWidget, QDialog, QLabel, QLineEdit, QDialogButtonBox
+    QMenuBar, QFileDialog, QTabWidget, QDialog, QLabel, QLineEdit, QDialogButtonBox,
+    QListWidget, QListWidgetItem, QPushButton, QStyledItemDelegate
     )
 
 class PageRenameDialog(QDialog):
@@ -28,14 +29,56 @@ class PageRenameDialog(QDialog):
         self.layout.addWidget(self.text_input)
         self.layout.addWidget(self.buttons)
 
-class EquationsWidget(QWidget):
+class EquationEditorWidget(QWidget):
     def __init__(self):
         super().__init__()
 
         # table for equations
-        self.table = QTableWidget(2, 1, self)
+        self.table = QTableWidget(1, 1, self)
         self.table.setHorizontalHeaderLabels(["Equation"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table_layout = QVBoxLayout()
+        self.table_layout.addWidget(self.table)
+
+        # buttons for adding/removing equations
+        self.add_equation = QPushButton("+", self)
+        self.add_equation.setToolTip("Add Equation")
+        self.remove_equation = QPushButton("-", self)
+        self.remove_equation.setToolTip("Remove Selected Equation")
+        self.button_layout = QHBoxLayout()
+        self.button_layout.addWidget(self.add_equation)
+        self.button_layout.addWidget(self.remove_equation)
+
+        # editor layout
+        self.layout = QVBoxLayout(self)
+        self.layout.addLayout(self.table_layout)
+        self.layout.addLayout(self.button_layout)
+
+        self.table.itemChanged.connect(self.item_changed)
+        self.add_equation.clicked.connect(self.add_clicked)
+        self.remove_equation.clicked.connect(self.remove_clicked)
+
+    @Slot()
+    def item_changed(self, item: QTableWidgetItem):
+        last_row = self.table.rowCount() - 1
+        text_valid = len(item.text().strip()) > 0
+        if (item.row() == last_row and text_valid):
+            self.table.insertRow(last_row + 1)
+
+    @Slot()
+    def add_clicked(self):
+        self.table.insertRow(self.table.rowCount())
+
+    @Slot()
+    def remove_clicked(self):
+        self.table.removeRow(self.table.currentRow())
+
+class WorkspaceWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        # equation editor
+        self.equation_editor = EquationEditorWidget()
 
         # graphics scene
         self.scene = QGraphicsScene()
@@ -47,7 +90,7 @@ class EquationsWidget(QWidget):
 
         # splitter layout
         self.splitter = QSplitter(self)
-        self.splitter.addWidget(self.table)
+        self.splitter.addWidget(self.equation_editor)
         self.splitter.addWidget(self.graph)
         self.splitter.setCollapsible(0, False)
         self.splitter.setCollapsible(1, False)
@@ -56,14 +99,6 @@ class EquationsWidget(QWidget):
         # overall layout
         self.layout = QHBoxLayout(self)
         self.layout.addWidget(self.splitter)
-
-        self.table.itemChanged.connect(self.add_equation)
-
-    @Slot()
-    def add_equation(self, item: QTableWidgetItem):
-        last_row = self.table.rowCount() - 1
-        if (item.row() == last_row):
-            self.table.insertRow(last_row + 1)
 
     # unlikely to be part of final implementation, 
     # temporary for demo purposes
@@ -83,7 +118,7 @@ class TabContainerWidget(QWidget):
         super().__init__()
 
         self.tabs = QTabWidget(self)
-        self.tabs.addTab(EquationsWidget(), f"Page {self.tabs.count()+1}")
+        self.tabs.addTab(WorkspaceWidget(), f"Page {self.tabs.count()+1}")
         self.tabs.setDocumentMode(True)
         self.tabs.setMovable(True)
         self.tabs.setTabsClosable(True)
@@ -109,7 +144,7 @@ class TabContainerWidget(QWidget):
 
     @Slot()
     def add_page(self):
-        self.tabs.addTab(EquationsWidget(), f"Page {self.tabs.count()+1}")
+        self.tabs.addTab(WorkspaceWidget(), f"Page {self.tabs.count()+1}")
         self.tabs.setCurrentIndex(self.tabs.count()-1)
 
 class MainWindow(QMainWindow):
