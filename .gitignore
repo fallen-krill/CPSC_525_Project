@@ -5,3 +5,8 @@
 *~
 \#*\#
 .\#*
+
+# serialized file ext.
+*.pkl
+
+/__pycache__
