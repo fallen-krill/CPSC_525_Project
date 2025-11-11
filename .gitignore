@@ -1,4 +1,12 @@
 .vscode/**
+
 .venv
 *.jpg
 *.JPG
+
+# emacs autosaves
+'#*#'
+*~
+\#*\#
+.\#*
+
