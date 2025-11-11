@@ -19,7 +19,7 @@ class Function_tree:
         "asin" : 1,
         "acos" : 1,
         "atan" : 1,
-        "sqrt" : 1
+        "sqrt" : 1,
     }
 
     """
@@ -51,7 +51,7 @@ class Function_tree:
         """
 
         # Tree data structure
-        self.function = None
+        self.function = "error"
         self.arg1 = None
         self.arg2 = None
 
@@ -60,6 +60,9 @@ class Function_tree:
             return
         
         tokens = tokenize(input_string)
+
+        if tokens == []:
+            return
         
         # Do order of operations in reverse:
 
@@ -146,10 +149,13 @@ class Function_tree:
                 self.arg1 = None
                 self.arg2 = None
 
+                # if there is only one token and it is not defined
                 if (self.function not in set("+-*/^!") and not is_number(self.function)
                     and not self.function in self.allowed_constants and self.function not in set("xyz")):
-                    raise ValueError("bad input")
-
+                    self.function = "error"
+                    self.arg1 = None
+                    self.arg2 = None
+                    
                 return
             
         # This should never be reached   
@@ -168,6 +174,28 @@ class Function_tree:
             return self.function
         else:
             return "error"
+
+        
+    def is_valid(self):
+        """
+        Validates a function tree
+        Return True if no "error" in function tree
+        Otherwise, return false
+        """
+        if self.function == "error":
+            return False
+
+        if self.arg1 == None and self.arg2 == None:
+            return True
+        
+        elif self.arg1 == None and self.arg2 != None:
+            return self.arg2.is_valid()
+
+        elif self.arg1 != None and self.arg2 == None:
+            return self.arg1.is_valid()
+
+        else:
+            return self.arg1.is_valid() and self.arg2.is_valid()
 
         
     def evaluate(self, x):
@@ -201,8 +229,8 @@ class Function_tree:
                 return self.arg1.evaluate(x) / self.arg2.evaluate(x)
             case '^':
                 return self.arg1.evaluate(x) ** self.arg2.evaluate(x)
-            case '!':
-                return math.factorial(self.arg1.evaluate(x))
+            case '!': # We use gamma function in place of factorials
+                return math.gamma(self.arg1.evaluate(x))
             case "sin":
                 return math.sin(self.arg1.evaluate(x))
             case "cos":
@@ -486,7 +514,7 @@ def tokenize(input_string):
     - an operator, or
     - an expression enclosed in round brackets.
     """
-
+        
     # Start by stripping outer brackets and whitespace if they are present.
     input_string = input_string.strip(" ")
     input_string = strip_outer_brackets(input_string)
@@ -611,26 +639,33 @@ def main():
         # print("Group factorials: ",group_factorials(tokenize(input_string)))
         # print("Group factorials and exponents", group_exp_fact(tokenize(input_string)))
         # print("Group functions: ",group_func_args(tokenize(input_string), Function_tree.allowed_functions)
-        print("\nFunction tree: ", str(Function_tree(input_string)),"\n")
-
+        function_tree = None
         try:
+            function_tree = Function_tree(input_string)
+            print("\nFunction tree: ", str(function_tree), "\n")
+           
+        except ValueError as e:
+            print(e, "\n")
+        
+
+        print("Valid function: " + str(function_tree.is_valid()) + "\n")
+        if function_tree.is_valid():      
             step = 0.5
             for x in range(-20, 21):
                 try:
-                    print("f"+str(i)+"("+str(step*x)+") = ",Function_tree(input_string).evaluate(step*x))
+                    print("f"+str(i)+"("+str(step*x)+") = ", Function_tree(input_string).evaluate(step*x))
                 except (ZeroDivisionError):
                     print("not defined at x=", step*x)
                 except ValueError as e:
                     print(e)
                 except TypeError as e:
                     print("not defined at x=", step*x)
-        except BaseException as e:
-            print(e)
-            
+
         print("\n")
         
         i+=1
         input_string = input("f"+str(i)+"(x) = ")
+
 
     
 main()
