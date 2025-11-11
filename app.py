@@ -6,10 +6,27 @@ from PySide6.QtGui import (
     QPixmap, QTransform, QAction, QColor
 )
 from PySide6.QtWidgets import (
-    QWidget, QMainWindow, QApplication, QHBoxLayout, QSplitter, QTableWidget, 
-    QTableWidgetItem, QHeaderView, QGraphicsView, QGraphicsScene, QMenuBar, 
-    QFileDialog, QTabWidget
+    QWidget, QMainWindow, QApplication, QHBoxLayout, QVBoxLayout, QSplitter, 
+    QTableWidget, QTableWidgetItem, QHeaderView, QGraphicsView, QGraphicsScene, 
+    QMenuBar, QFileDialog, QTabWidget, QDialog, QLabel, QLineEdit, QDialogButtonBox
     )
+
+class PageRenameDialog(QDialog):
+    def __init__(self, name: str):
+        super().__init__(modal=True)
+        self.text = QLabel("Edit page name.", self)
+        self.text_input = QLineEdit(self, text=name)
+        self.buttons = QDialogButtonBox(Qt.Orientation.Horizontal, self)
+        self.buttons.addButton("Ok", QDialogButtonBox.ButtonRole.AcceptRole)
+        self.buttons.addButton("Cancel", QDialogButtonBox.ButtonRole.RejectRole)
+
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+
+        self.layout = QVBoxLayout(self)
+        self.layout.addWidget(self.text)
+        self.layout.addWidget(self.text_input)
+        self.layout.addWidget(self.buttons)
 
 class EquationsWidget(QWidget):
     def __init__(self):
@@ -66,12 +83,13 @@ class TabContainerWidget(QWidget):
         super().__init__()
 
         self.tabs = QTabWidget(self)
-        self.tabs.addTab(EquationsWidget(), "Main")
+        self.tabs.addTab(EquationsWidget(), f"Page {self.tabs.count()+1}")
         self.tabs.setDocumentMode(True)
         self.tabs.setMovable(True)
         self.tabs.setTabsClosable(True)
 
         self.tabs.tabCloseRequested.connect(self.close_page)
+        self.tabs.tabBarDoubleClicked.connect(self.tab_double_clicked)
 
         self.layout = QHBoxLayout(self)
         self.layout.addWidget(self.tabs)
@@ -79,6 +97,15 @@ class TabContainerWidget(QWidget):
     @Slot()
     def close_page(self, index: int):
         self.tabs.removeTab(index)
+
+    @Slot()
+    def tab_double_clicked(self, index: int):
+        if index == -1:
+            return
+        
+        rename_dialog = PageRenameDialog(self.tabs.tabText(index))
+        if rename_dialog.exec():
+            self.tabs.setTabText(index, rename_dialog.text_input.text().strip())
 
     @Slot()
     def add_page(self):
