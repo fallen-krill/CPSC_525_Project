@@ -230,7 +230,7 @@ class Function_tree:
             case '^':
                 return self.arg1.evaluate(x) ** self.arg2.evaluate(x)
             case '!': # We use gamma function in place of factorials
-                return math.gamma(self.arg1.evaluate(x))
+                return math.gamma(self.arg1.evaluate(x) + 1)
             case "sin":
                 return math.sin(self.arg1.evaluate(x))
             case "cos":
