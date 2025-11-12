@@ -45,8 +45,6 @@ class EquationEditorWidget(QWidget):
     def __init__(self, chart):
         super().__init__()
 
-        self.chart = chart
-
         # table for equations
         self.table = QTableWidget(1, 1, self)
         self.table.setHorizontalHeaderLabels(["Equation"])
@@ -72,40 +70,53 @@ class EquationEditorWidget(QWidget):
         self.add_equation.clicked.connect(self.add_clicked)
         self.remove_equation.clicked.connect(self.remove_clicked)
 
+        #chart and function tree list
+        self.chart = chart
+        self.series_list = [""] 
+
     @Slot()
     def item_changed(self, item: QTableWidgetItem):
         last_row = self.table.rowCount() - 1
         text_valid = len(item.text().strip()) > 0
         if (item.row() == last_row and text_valid):
             self.table.insertRow(last_row + 1)
+            self.series_list.append("")
 
-        #get the item.text() to be turned into function_tree object
-        #and series added to chart
-        #should probably handle this in the code for chart
-        func = Function_tree(item.text())
+        if (self.series_list[item.row()] != ""):
+            prev_function = self.series_list[item.row()]
+            self.chart.remove_line(prev_function)
 
-        #todo: this should be handled in chart.py
-        series = QLineSeries()
-        points = [
-            QPointF(x/10, func.evaluate(x/10))
-            for x in range(-50, 50)
-            ]
-        series.append(points)
+        #todo: need error handling
+        func_tree = Function_tree(item.text())
 
-        print(len(self.chart.series()))
-        print(item.row())
-
+        series = self.evaluate(func_tree)
         self.chart.add_line(series)
+        self.series_list[item.row()] = series
 
     @Slot()
     def add_clicked(self):
         self.table.insertRow(self.table.rowCount())
+        self.series_list.append("")
 
     @Slot()
     def remove_clicked(self):
         self.chart.remove_line(self.chart.series()[self.table.currentRow()])
+        self.series_list.remove(self.chart.series()[self.table.currentRow()])
 
         self.table.removeRow(self.table.currentRow())
+
+    #temporary helper function
+    #todo: this should be handled in chart.py
+    def evaluate(self, func_tree):
+        series = QLineSeries()
+        points = [
+            QPointF(x/10, func_tree.evaluate(x/10))
+            for x in range(-50, 50)
+            ]
+        series.append(points)
+
+        return series
+
 
 class WorkspaceWidget(QWidget):
     def __init__(self):
