@@ -37,11 +37,13 @@ class Chart(QChart):
 
         return True
 
-    def add_line(self):
-        pass
+    def add_line(self, series):
+        self.addSeries(series)
+        self.createDefaultAxes() 
 
-    def remove_line(self):
-        pass
+    def remove_line(self, series):
+        self.removeSeries(series)
+
 
 class ChartView(QChartView):
     def __init__(self, chart):

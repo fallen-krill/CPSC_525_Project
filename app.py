@@ -1,3 +1,4 @@
+import math
 import sys
 from PySide6.QtCore import (
     QPoint, QPointF, QRect, Slot, Qt, QSize
@@ -12,8 +13,16 @@ from PySide6.QtWidgets import (
     QListWidget, QListWidgetItem, QPushButton, QStyledItemDelegate
     )
 
-from chart import Chart, ChartView
-from PySide6.QtCharts import QChart, QChartView, QLineSeries
+from PySide6.QtCharts import (
+    QChart, QChartView, QLineSeries
+    )
+
+from chart import (
+    Chart, ChartView
+    )
+from function_tree import (
+    Function_tree
+)
 
 class PageRenameDialog(QDialog):
     def __init__(self, name: str):
@@ -33,8 +42,10 @@ class PageRenameDialog(QDialog):
         self.layout.addWidget(self.buttons)
 
 class EquationEditorWidget(QWidget):
-    def __init__(self):
+    def __init__(self, chart):
         super().__init__()
+
+        self.chart = chart
 
         # table for equations
         self.table = QTableWidget(1, 1, self)
@@ -68,41 +79,55 @@ class EquationEditorWidget(QWidget):
         if (item.row() == last_row and text_valid):
             self.table.insertRow(last_row + 1)
 
+        #get the item.text() to be turned into function_tree object
+        #and series added to chart
+        #should probably handle this in the code for chart
+        func = Function_tree(item.text())
+
+        #todo: this should be handled in chart.py
+        series = QLineSeries()
+        points = [
+            QPointF(x/10, func.evaluate(x/10))
+            for x in range(-50, 50)
+            ]
+        series.append(points)
+
+        print(len(self.chart.series()))
+        print(item.row())
+
+        self.chart.add_line(series)
+
     @Slot()
     def add_clicked(self):
         self.table.insertRow(self.table.rowCount())
 
     @Slot()
     def remove_clicked(self):
+        self.chart.remove_line(self.chart.series()[self.table.currentRow()])
+
         self.table.removeRow(self.table.currentRow())
 
 class WorkspaceWidget(QWidget):
     def __init__(self):
         super().__init__()
 
+        chart = Chart()
+
         # equation editor
-        self.equation_editor = EquationEditorWidget()
+        self.equation_editor = EquationEditorWidget(chart)
 
         # graphics scene
         #self.scene = QGraphicsScene()
         #self.scene.setBackgroundBrush(QColor('blue')) # coloured to show where scene is
         #self.img = None
-        chart = Chart()
-
-        #temporary
-        series = QLineSeries()
-        points = [
-            QPointF(i/100, -i/100)
-            for i in range(-500,500)]
-        series.append(points)
 
         # graphics view
         #self.graph = QGraphicsView(self.scene)
         self.graph = ChartView(chart)
 
-        #temporary
-        chart.addSeries(series) #todo: adding series (function trees) must be handled on its own
-        chart.createDefaultAxes() 
+        #todo: figure out what to do with the legend
+        #todo: add (0,0) axis lines
+        chart.createDefaultAxes()
 
         # splitter layout
         self.splitter = QSplitter(self)
@@ -115,6 +140,8 @@ class WorkspaceWidget(QWidget):
         # overall layout
         self.layout = QHBoxLayout(self)
         self.layout.addWidget(self.splitter)
+
+
 
     # unlikely to be part of final implementation, 
     # temporary for demo purposes
