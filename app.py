@@ -1,6 +1,6 @@
 import sys
 from PySide6.QtCore import (
-    QPoint, QRect, Slot, Qt, QSize
+    QPoint, QPointF, QRect, Slot, Qt, QSize
 )
 from PySide6.QtGui import (
     QPixmap, QTransform, QAction, QColor
@@ -11,6 +11,9 @@ from PySide6.QtWidgets import (
     QMenuBar, QFileDialog, QTabWidget, QDialog, QLabel, QLineEdit, QDialogButtonBox,
     QListWidget, QListWidgetItem, QPushButton, QStyledItemDelegate
     )
+
+from chart import Chart, ChartView
+from PySide6.QtCharts import QChart, QChartView, QLineSeries
 
 class PageRenameDialog(QDialog):
     def __init__(self, name: str):
@@ -81,12 +84,25 @@ class WorkspaceWidget(QWidget):
         self.equation_editor = EquationEditorWidget()
 
         # graphics scene
-        self.scene = QGraphicsScene()
-        self.scene.setBackgroundBrush(QColor('blue')) # coloured to show where scene is
-        self.img = None
+        #self.scene = QGraphicsScene()
+        #self.scene.setBackgroundBrush(QColor('blue')) # coloured to show where scene is
+        #self.img = None
+        chart = Chart()
+
+        #temporary
+        series = QLineSeries()
+        points = [
+            QPointF(i/100, -i/100)
+            for i in range(-500,500)]
+        series.append(points)
 
         # graphics view
-        self.graph = QGraphicsView(self.scene)
+        #self.graph = QGraphicsView(self.scene)
+        self.graph = ChartView(chart)
+
+        #temporary
+        chart.addSeries(series) #todo: adding series (function trees) must be handled on its own
+        chart.createDefaultAxes() 
 
         # splitter layout
         self.splitter = QSplitter(self)
@@ -196,6 +212,10 @@ if __name__ == "__main__":
     widget = TabContainerWidget()
     window = MainWindow(widget)
     window.resize(1000,600)
+
+    window.grabGesture(Qt.PanGesture)
+    window.grabGesture(Qt.PinchGesture)
+
     window.show()
 
     sys.exit(app.exec())
