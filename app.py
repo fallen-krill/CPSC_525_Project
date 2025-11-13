@@ -216,10 +216,8 @@ class MainWindow(QMainWindow):
         new_project.add_page()
         self.change_project(new_project)
 
-    # TODO: Implement file saving and loading
     @Slot()
     def open_file(self):
-        # currently dummy implementation
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
         dialog.setNameFilter("Graph Projects (*.pkl)")
@@ -232,7 +230,8 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def save_file(self):
-        save("defaultSave.pkl", self.project)
+        fileName = QFileDialog.getSaveFileName()
+        save(fileName[0], self.project)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
