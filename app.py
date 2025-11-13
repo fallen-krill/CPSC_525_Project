@@ -1,4 +1,6 @@
 import sys
+from project import Page, Project
+from serialize import load, save
 from PySide6.QtCore import (
     QPoint, QRect, Slot, Qt, QSize
 )
@@ -30,24 +32,29 @@ class PageRenameDialog(QDialog):
         self.layout.addWidget(self.buttons)
 
 class EquationEditorWidget(QWidget):
-    def __init__(self):
+    def __init__(self, page: Page):
         super().__init__()
+        self.page = page
 
         # table for equations
         self.table = QTableWidget(1, 1, self)
         self.table.setHorizontalHeaderLabels(["Equation"])
+        # self.table.setItem(0,0,QTableWidgetItem("thththt"))
+        for i, equation in enumerate(self.page.equations):
+            self.table.insertRow(i)
+            self.table.setItem(i, 0, QTableWidgetItem(equation))
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table_layout = QVBoxLayout()
         self.table_layout.addWidget(self.table)
 
         # buttons for adding/removing equations
-        self.add_equation = QPushButton("+", self)
-        self.add_equation.setToolTip("Add Equation")
-        self.remove_equation = QPushButton("-", self)
-        self.remove_equation.setToolTip("Remove Selected Equation")
+        self.add_equation_button = QPushButton("+", self)
+        self.add_equation_button.setToolTip("Add Equation")
+        self.remove_equation_button = QPushButton("-", self)
+        self.remove_equation_button.setToolTip("Remove Selected Equation")
         self.button_layout = QHBoxLayout()
-        self.button_layout.addWidget(self.add_equation)
-        self.button_layout.addWidget(self.remove_equation)
+        self.button_layout.addWidget(self.add_equation_button)
+        self.button_layout.addWidget(self.remove_equation_button)
 
         # editor layout
         self.layout = QVBoxLayout(self)
@@ -55,30 +62,43 @@ class EquationEditorWidget(QWidget):
         self.layout.addLayout(self.button_layout)
 
         self.table.itemChanged.connect(self.item_changed)
-        self.add_equation.clicked.connect(self.add_clicked)
-        self.remove_equation.clicked.connect(self.remove_clicked)
+        self.add_equation_button.clicked.connect(self.add_clicked)
+        self.remove_equation_button.clicked.connect(self.remove_clicked)
+
+    def add_equation(self, index: int):
+        self.table.insertRow(index)
+        self.page.add_equation()
+
+    def remove_equation(self, index: int):
+        self.table.removeRow(index)
+        self.page.remove_equation(index)
 
     @Slot()
     def item_changed(self, item: QTableWidgetItem):
         last_row = self.table.rowCount() - 1
-        text_valid = len(item.text().strip()) > 0
-        if (item.row() == last_row and text_valid):
-            self.table.insertRow(last_row + 1)
+        text = item.text().strip()
+        text_valid = len(text) > 0
+        if text_valid:
+            if item.row() == last_row:
+                self.add_equation(last_row + 1)
+            self.page.equations[item.row()] = text
+
 
     @Slot()
     def add_clicked(self):
-        self.table.insertRow(self.table.rowCount())
+        self.add_equation(self.table.rowCount())
 
     @Slot()
     def remove_clicked(self):
-        self.table.removeRow(self.table.currentRow())
+        self.remove_equation(self.table.currentRow())
 
 class WorkspaceWidget(QWidget):
-    def __init__(self):
+    def __init__(self, page: Page):
         super().__init__()
+        self.page = page
 
         # equation editor
-        self.equation_editor = EquationEditorWidget()
+        self.equation_editor = EquationEditorWidget(page)
 
         # graphics scene
         self.scene = QGraphicsScene()
@@ -114,11 +134,13 @@ class WorkspaceWidget(QWidget):
         self.scene.addPixmap(self.img)
 
 class TabContainerWidget(QWidget):
-    def __init__(self):
+    def __init__(self, project: Project):
         super().__init__()
+        self.project = project
 
         self.tabs = QTabWidget(self)
-        self.tabs.addTab(WorkspaceWidget(), f"Page {self.tabs.count()+1}")
+        for page in self.project.pages:
+            self.tabs.addTab(WorkspaceWidget(page), page.name)
         self.tabs.setDocumentMode(True)
         self.tabs.setMovable(True)
         self.tabs.setTabsClosable(True)
@@ -132,6 +154,7 @@ class TabContainerWidget(QWidget):
     @Slot()
     def close_page(self, index: int):
         self.tabs.removeTab(index)
+        self.project.remove_page(index)
 
     @Slot()
     def tab_double_clicked(self, index: int):
@@ -140,38 +163,58 @@ class TabContainerWidget(QWidget):
         
         rename_dialog = PageRenameDialog(self.tabs.tabText(index))
         if rename_dialog.exec():
-            self.tabs.setTabText(index, rename_dialog.text_input.text().strip())
+            name = rename_dialog.text_input.text().strip()
+            self.tabs.setTabText(index, name)
+            self.tabs.widget(index).page.name = name
 
     @Slot()
     def add_page(self):
-        self.tabs.addTab(WorkspaceWidget(), f"Page {self.tabs.count()+1}")
+        page = self.project.add_page()
+        self.tabs.addTab(WorkspaceWidget(page), page.name)
         self.tabs.setCurrentIndex(self.tabs.count()-1)
 
 class MainWindow(QMainWindow):
-    def __init__(self, widget: TabContainerWidget):
+    def __init__(self, widget: TabContainerWidget, project: Project):
         super().__init__()
+        self.project = project
         self.setWindowTitle("Name")
 
         # creating menu actions
-        openAction = QAction("Open...", self)
-        openAction.triggered.connect(self.open_file)
+        self.newFileAction = QAction("New Project", self)
+        self.newFileAction.triggered.connect(self.new_file)
 
-        saveAction = QAction("Save", self)
-        saveAction.triggered.connect(self.save_file)
+        self.openAction = QAction("Open...", self)
+        self.openAction.triggered.connect(self.open_file)
 
-        newPageAction = QAction("New Page", self)
-        newPageAction.triggered.connect(widget.add_page)
+        self.saveAction = QAction("Save", self)
+        self.saveAction.triggered.connect(self.save_file)
+
+        self.newPageAction = QAction("New Page", self)
+        self.newPageAction.triggered.connect(widget.add_page)
 
         # creating menu bar
         menu = self.menuBar()
 
         fileMenu = menu.addMenu("File")
-        fileMenu.addAction(openAction)
-        fileMenu.addAction(saveAction)
-        fileMenu.addAction(newPageAction)
+        fileMenu.addAction(self.newFileAction)
+        fileMenu.addAction(self.openAction)
+        fileMenu.addAction(self.saveAction)
+        fileMenu.addAction(self.newPageAction)
 
         self.mainContent = widget
         self.setCentralWidget(widget)
+
+    def change_project(self, new_project: Project):
+        self.project = new_project
+        self.mainContent = TabContainerWidget(self.project)
+        self.newPageAction.triggered.connect(self.mainContent.add_page)
+        self.setCentralWidget(self.mainContent)
+
+    @Slot()
+    def new_file(self):
+        new_project = Project()
+        new_project.add_page()
+        self.change_project(new_project)
 
     # TODO: Implement file saving and loading
     @Slot()
@@ -179,22 +222,24 @@ class MainWindow(QMainWindow):
         # currently dummy implementation
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        dialog.setNameFilter("Images (*.png, *.jpg)")
+        dialog.setNameFilter("Graph Projects (*.pkl)")
         # dialog.setDirectory()
         fileName = ""
         if dialog.exec():
             fileName = dialog.selectedFiles()[0]
 
-        self.mainContent.set_image(QPixmap(fileName))
+        self.change_project(load(fileName))
 
     @Slot()
     def save_file(self):
-        pass
+        save("defaultSave.pkl", self.project)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    widget = TabContainerWidget()
-    window = MainWindow(widget)
+    default_project = Project()
+    default_project.add_page()
+    widget = TabContainerWidget(default_project)
+    window = MainWindow(widget, default_project)
     window.resize(1000,600)
     window.show()
 
