@@ -134,10 +134,12 @@ class EquationEditorWidget(QWidget):
     #todo: this should be handled in chart.py
     def evaluate(self, func_tree):
         series = QLineSeries()
-        points = [
-            QPointF(x/10, func_tree.evaluate(x/10))
-            for x in range(-50, 50)
-            ]
+        points = []
+        for x in range (-500, 500):
+            y = func_tree.evaluate(x/100)
+            if y != None:
+                points.append(QPointF(x/100, y))
+            
         series.append(points)
 
         return series
