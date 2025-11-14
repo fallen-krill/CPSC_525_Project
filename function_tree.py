@@ -27,8 +27,8 @@ class Function_tree:
     to define their own constants and add them in here.
     """
     allowed_constants = {
-        "e" : 2.718281828459045235360287471352,
-        "pi":3.141592653589323846264
+        "e" : math.e,
+        "pi": math.pi
     }
 
     
@@ -254,7 +254,7 @@ class Function_tree:
                 case "log_":
                     return math.log(self.arg2.evaluate(x), self.arg1.evaluate(x))
                 case "ln":
-                    return math.log(2.718281828459045235360287471352, self.arg1.evaluate(x))
+                    return math.log(self.arg1.evaluate(x), math.e)
                 case "sqrt":
                     return math.sqrt(self.arg1.evaluate(x))
                 case _: # should never be reached
@@ -651,7 +651,7 @@ def main():
 
         print("Valid function: " + str(function_tree.is_valid()) + "\n")
         if function_tree.is_valid():      
-            step = 0.5
+            step = 0.1 * math.e
             for x in range(-20, 21):
                 try:
                     print("f"+str(i)+"("+str(step*x)+") = ", function_tree.evaluate(step*x))
