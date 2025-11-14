@@ -10,7 +10,7 @@
 \#*\#
 .\#*
 
-# serialized file ext.
-*.pkl
-
 /__pycache__
+
+# graph files
+*.pkl

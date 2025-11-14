@@ -666,6 +666,5 @@ def main():
         i+=1
         input_string = input("f"+str(i)+"(x) = ")
 
-
-    
-main()
+if __name__ == "__main__":
+    main()
