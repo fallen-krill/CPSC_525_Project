@@ -86,12 +86,16 @@ class EquationEditorWidget(QWidget):
             prev_function = self.series_list[item.row()]
             self.chart.remove_line(prev_function)
 
-        #todo: need error handling
-        func_tree = Function_tree(item.text())
+        #calculate series, add to chart
+        try:
+            func_tree = Function_tree(item.text())
 
-        series = self.evaluate(func_tree)
-        self.chart.add_line(series)
-        self.series_list[item.row()] = series
+            series = self.evaluate(func_tree)
+            self.chart.add_line(series)
+            self.series_list[item.row()] = series
+        except ValueError:
+            print("valueerror exception")
+            self.series_list[item.row()] = ""
 
     @Slot()
     def add_clicked(self):
@@ -100,8 +104,9 @@ class EquationEditorWidget(QWidget):
 
     @Slot()
     def remove_clicked(self):
-        self.chart.remove_line(self.chart.series()[self.table.currentRow()])
-        self.series_list.remove(self.chart.series()[self.table.currentRow()])
+        if self.series_list[self.table.currentRow()] != "":
+            self.chart.remove_line(self.chart.series()[self.table.currentRow()])
+        self.series_list.pop(self.table.currentRow())
 
         self.table.removeRow(self.table.currentRow())
 

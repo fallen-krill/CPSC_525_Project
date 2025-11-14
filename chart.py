@@ -8,7 +8,6 @@ class Chart(QChart):
         #todo: make chart widget that can show on the app.py main widget replacing the temp image thing
         #todo: need to iterate through eq. editor
             #delete or add line as equations are removed or added
-        #todo: need to make sure it changes when pages are selected
 
         super().__init__()
 
