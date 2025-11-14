@@ -86,10 +86,10 @@ class Function_tree:
                 self.function = tokens[i][0]
                 self.arg1 = Function_tree(detokenize(tokens[0:i]))
                 self.arg2 = Function_tree(detokenize(tokens[i + 1 : len(tokens)]))
-                
+                print(tokens)
                 return
-            
-            else:
+
+            elif tokens[i-1] != "*" and tokens[i-1] != "/":
                 self.function = '*'
                 self.arg1 = Function_tree(detokenize(tokens[0:i]))
                 self.arg2 = Function_tree(detokenize(tokens[i : len(tokens)]))
@@ -151,7 +151,7 @@ class Function_tree:
 
                 # if there is only one token and it is not defined
                 if (self.function not in set("+-*/^!") and not is_number(self.function)
-                    and not self.function in self.allowed_constants and self.function not in set("xyz")):
+                    and self.function not in self.allowed_constants and self.function not in set("xyz")):
                     self.function = "error"
                     self.arg1 = None
                     self.arg2 = None
@@ -230,7 +230,7 @@ class Function_tree:
             case '^':
                 return self.arg1.evaluate(x) ** self.arg2.evaluate(x)
             case '!': # We use gamma function in place of factorials
-                return math.gamma(self.arg1.evaluate(x))
+                return math.gamma(self.arg1.evaluate(x) + 1)
             case "sin":
                 return math.sin(self.arg1.evaluate(x))
             case "cos":
@@ -281,7 +281,7 @@ def validate_input(input_string):
     valid_characters = set("abcdefghijklmnopqrstuvwxyz .0987654321()+-*/^!_")
     if not(set(input_string).issubset(valid_characters)):
         return False
-    if not (input_string[0] in set("abcdefghijklmnopqrstuvwxyz. 1234567890(+/")):
+    if (input_string[0] not in set("abcdefghijklmnopqrstuvwxyz. 1234567890(+/")):
         return False
     # ensure bracket depth is 0 at the end of the string
     bracket_depth = 0
@@ -653,7 +653,7 @@ def main():
             step = 0.5
             for x in range(-20, 21):
                 try:
-                    print("f"+str(i)+"("+str(step*x)+") = ", Function_tree(input_string).evaluate(step*x))
+                    print("f"+str(i)+"("+str(step*x)+") = ", function_tree.evaluate(step*x))
                 except (ZeroDivisionError):
                     print("not defined at x=", step*x)
                 except ValueError as e:
