@@ -86,10 +86,10 @@ class Function_tree:
                 self.function = tokens[i][0]
                 self.arg1 = Function_tree(detokenize(tokens[0:i]))
                 self.arg2 = Function_tree(detokenize(tokens[i + 1 : len(tokens)]))
-                
+                print(tokens)
                 return
 
-            elif tokens[i-1] != "*":
+            elif tokens[i-1] != "*" and tokens[i-1] != "/":
                 self.function = '*'
                 self.arg1 = Function_tree(detokenize(tokens[0:i]))
                 self.arg2 = Function_tree(detokenize(tokens[i : len(tokens)]))
