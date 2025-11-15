@@ -44,7 +44,7 @@ class PageRenameDialog(QDialog):
         self.layout.addWidget(self.buttons)
 
 class EquationEditorWidget(QWidget):
-    def __init__(self, page: Page, chart):
+    def __init__(self, page: Page, chart: Chart):
         super().__init__()
         self.page = page
 
@@ -52,9 +52,18 @@ class EquationEditorWidget(QWidget):
         self.table = QTableWidget(1, 1, self)
         self.table.setHorizontalHeaderLabels(["Equation"])
         # self.table.setItem(0,0,QTableWidgetItem("thththt"))
+
+        #chart and function tree list
+        self.chart = chart
+        self.series_list = [""] 
+
         for i, equation in enumerate(self.page.equations):
             self.table.insertRow(i)
             self.table.setItem(i, 0, QTableWidgetItem(equation))
+
+            self.series_list.append("")
+            self.load_to_chart(equation, i)
+            
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table_layout = QVBoxLayout()
         self.table_layout.addWidget(self.table)
@@ -76,10 +85,6 @@ class EquationEditorWidget(QWidget):
         self.table.itemChanged.connect(self.item_changed)
         self.add_equation_button.clicked.connect(self.add_clicked)
         self.remove_equation_button.clicked.connect(self.remove_clicked)
-        
-        #chart and function tree list
-        self.chart = chart
-        self.series_list = [""] 
 
     def add_equation(self, index: int):
         self.table.insertRow(index)
@@ -104,21 +109,11 @@ class EquationEditorWidget(QWidget):
             prev_function = self.series_list[item.row()]
             self.chart.remove_line(prev_function)
 
-        #calculate series, add to chart
-        try:
-            func_tree = Function_tree(item.text())
-
-            series = self.evaluate(func_tree)
-            self.chart.add_line(series)
-            self.series_list[item.row()] = series
-        except ValueError:
-            print("valueerror exception")
-            self.series_list[item.row()] = ""
+        self.load_to_chart(item.text(), item.row())
 
     @Slot()
     def add_clicked(self):
         self.add_equation(self.table.rowCount())
-        #self.table.insertRow(self.table.rowCount())
         self.series_list.append("")
 
     @Slot()
@@ -128,7 +123,19 @@ class EquationEditorWidget(QWidget):
         self.series_list.pop(self.table.currentRow())
         
         self.remove_equation(self.table.currentRow())
-        #self.table.removeRow(self.table.currentRow())
+
+    #todo: should probably be handled in chart.py
+    def load_to_chart(self, function, item_row):
+        #calculate series, add to chart
+        try:
+            func_tree = Function_tree(function)
+
+            series = self.evaluate(func_tree)
+            self.chart.add_line(series)
+            self.series_list[item_row] = series
+        except ValueError:
+            print("valueerror exception")
+            self.series_list[item_row] = ""
 
     #temporary helper function
     #todo: this should be handled in chart.py
