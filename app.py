@@ -55,14 +55,13 @@ class EquationEditorWidget(QWidget):
 
         #chart and function tree list
         self.chart = chart
-        self.series_list = [""] 
 
         for i, equation in enumerate(self.page.equations):
             self.table.insertRow(i)
             self.table.setItem(i, 0, QTableWidgetItem(equation))
 
-            self.series_list.append("")
-            self.load_to_chart(equation, i)
+            self.chart.add_line()
+            self.chart.load_line(equation, i)
             
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table_layout = QVBoxLayout()
@@ -99,57 +98,30 @@ class EquationEditorWidget(QWidget):
         last_row = self.table.rowCount() - 1
         text = item.text().strip()
         text_valid = len(text) > 0
+
         if text_valid:
             if item.row() == last_row:
                 self.add_equation(last_row + 1)
-                self.series_list.append("")
+                self.chart.add_line()
             self.page.equations[item.row()] = text
 
-        if (self.series_list[item.row()] != ""):
-            prev_function = self.series_list[item.row()]
-            self.chart.remove_line(prev_function)
+        else:
+            self.chart.remove_line(item.row())
 
-        self.load_to_chart(item.text(), item.row())
+        if (self.chart.series_list[item.row()] != ""):
+            self.chart.remove_line(item.row())
+
+        self.chart.load_line(item.text(), item.row())
 
     @Slot()
     def add_clicked(self):
         self.add_equation(self.table.rowCount())
-        self.series_list.append("")
+        self.chart.add_line()
 
     @Slot()
     def remove_clicked(self):
-        if self.series_list[self.table.currentRow()] != "":
-            self.chart.remove_line(self.chart.series()[self.table.currentRow()])
-        self.series_list.pop(self.table.currentRow())
-        
         self.remove_equation(self.table.currentRow())
-
-    #todo: should probably be handled in chart.py
-    def load_to_chart(self, function, item_row):
-        #calculate series, add to chart
-        try:
-            func_tree = Function_tree(function)
-
-            series = self.evaluate(func_tree)
-            self.chart.add_line(series)
-            self.series_list[item_row] = series
-        except ValueError:
-            print("valueerror exception")
-            self.series_list[item_row] = ""
-
-    #temporary helper function
-    #todo: this should be handled in chart.py
-    def evaluate(self, func_tree):
-        series = QLineSeries()
-        points = []
-        for x in range (-500, 500):
-            y = func_tree.evaluate(x/100)
-            if y != None:
-                points.append(QPointF(x/100, y))
-            
-        series.append(points)
-
-        return series
+        self.chart.remove_line(self.table.currentRow(), True)
 
 
 class WorkspaceWidget(QWidget):

@@ -1,7 +1,8 @@
 from PySide6.QtWidgets import QGesture, QGestureEvent
-from PySide6.QtCore import Qt, QEvent
-from PySide6.QtCharts import QChart, QChartView
+from PySide6.QtCore import Qt, QEvent, QPointF
+from PySide6.QtCharts import QChart, QChartView, QLineSeries
 from PySide6.QtGui import QMouseEvent, QKeyEvent
+from function_tree import Function_tree
 
 class Chart(QChart):
     def __init__(self):
@@ -13,6 +14,9 @@ class Chart(QChart):
 
         self.grabGesture(Qt.PanGesture)
         self.grabGesture(Qt.PinchGesture)
+
+        self.func_list = [""] #not used
+        self.series_list = [""]
 
     def sceneEvent(self, event: QEvent):
         
@@ -36,12 +40,54 @@ class Chart(QChart):
 
         return True
 
-    def add_line(self, series):
-        self.addSeries(series)
-        self.createDefaultAxes() 
+    def load_line(self, equation: str, index: int):
+        """Loads result of equation onto the chart and to series_list at given index"""
+        #calculate series, add to chart
+        try:
+            #get function tree from equation, and evaluate it
+            func_tree = Function_tree(equation)
+            series = self.evaluate(func_tree)
+            
+            #add series to chart and set axes
+            self.addSeries(series)
+            self.createDefaultAxes()
+            self.series_list[index] = series
+        except ValueError as ve:
+            print("ValueError exception:", ve)
 
-    def remove_line(self, series):
-        self.removeSeries(series)
+    def add_line(self):
+        """Append entry to series_list"""
+        self.series_list.append("")
+
+    def remove_line(self, index: int, removing_entry: bool = False):
+        """Removes series from the chart, and its series_list if removing_entry is set"""
+        #Remove series from chart if it has been initialized
+        if self.series_list[index] != "":
+            self.removeSeries(self.series_list[index])
+
+        #Only pop index from series_list if removing_entry was set
+        if (removing_entry):
+            print("pop")
+            self.series_list.pop(index)
+
+    #not used, still here just in case
+    def modify_line(self, equation: str, index: int):
+        pass
+
+    def evaluate(self, func_tree: Function_tree):
+        """Evaluates func_tree at 1000 points along x-axis"""
+        #todo: allow custom x-axis ranges to be used
+        #todo: fix division at 0
+        series = QLineSeries()
+        points = []
+        #calculate 1000 points within range
+        for x in range (-500, 500):
+            y = func_tree.evaluate(x/100)
+            if y != None:
+                points.append(QPointF(x/100, y))
+        
+        series.append(points)
+        return series
 
 
 class ChartView(QChartView):
