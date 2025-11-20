@@ -67,7 +67,6 @@ class Chart(QChart):
 
         #Only pop index from series_list if removing_entry was set
         if (removing_entry):
-            print("pop")
             self.series_list.pop(index)
 
     #not used, still here just in case

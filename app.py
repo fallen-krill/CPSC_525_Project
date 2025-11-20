@@ -49,7 +49,7 @@ class EquationEditorWidget(QWidget):
         self.page = page
 
         # table for equations
-        self.table = QTableWidget(1, 1, self)
+        self.table = QTableWidget(0, 1, self)
         self.table.setHorizontalHeaderLabels(["Equation"])
         # self.table.setItem(0,0,QTableWidgetItem("thththt"))
 
@@ -115,13 +115,13 @@ class EquationEditorWidget(QWidget):
 
     @Slot()
     def add_clicked(self):
-        self.add_equation(self.table.rowCount())
         self.chart.add_line()
+        self.add_equation(self.table.rowCount())
 
     @Slot()
     def remove_clicked(self):
-        self.remove_equation(self.table.currentRow())
         self.chart.remove_line(self.table.currentRow(), True)
+        self.remove_equation(self.table.currentRow())
 
 
 class WorkspaceWidget(QWidget):
