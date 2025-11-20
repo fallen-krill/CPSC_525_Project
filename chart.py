@@ -1,7 +1,15 @@
-from PySide6.QtWidgets import QGesture, QGestureEvent
-from PySide6.QtCore import Qt, QEvent, QPointF
-from PySide6.QtCharts import QChart, QChartView, QLineSeries
-from PySide6.QtGui import QMouseEvent, QKeyEvent
+from PySide6.QtWidgets import (
+    QGesture, QGestureEvent
+)
+from PySide6.QtCore import (
+    Qt, QEvent, QPointF, QRectF
+)
+from PySide6.QtCharts import (
+    QChart, QChartView, QLineSeries, QScatterSeries
+)
+from PySide6.QtGui import (
+    QMouseEvent, QKeyEvent, QColor
+)
 from function_tree import Function_tree
 
 class Chart(QChart):
@@ -76,16 +84,24 @@ class Chart(QChart):
     def evaluate(self, func_tree: Function_tree):
         """Evaluates func_tree at 1000 points along x-axis"""
         #todo: allow custom x-axis ranges to be used
-        #todo: fix division at 0
+        #todo: figure out limits
         series = QLineSeries()
         points = []
         #calculate 1000 points within range
         for x in range (-500, 500):
             y = func_tree.evaluate(x/100)
+
             if y != None:
                 points.append(QPointF(x/100, y))
+            #else:
+            #    if (len(points) > 0):
+            #        points.append(points[len(points)-1])
+            #if (len(points) > 0):
+            #    print(points[len(points)-1])
         
         series.append(points)
+        #series.setBorderColor(QColor(0.0,0.0,0.0,0.0))
+        #series.setMarkerSize(3.0)
         return series
 
 
