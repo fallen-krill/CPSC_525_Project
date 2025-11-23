@@ -14,17 +14,31 @@ from function_tree import Function_tree
 
 class Chart(QChart):
     def __init__(self):
-        #todo: make chart widget that can show on the app.py main widget replacing the temp image thing
-        #todo: need to iterate through eq. editor
-            #delete or add line as equations are removed or added
 
         super().__init__()
 
         self.grabGesture(Qt.PanGesture)
         self.grabGesture(Qt.PinchGesture)
 
+        #The default colors used by QXYSeries when none are specified, copied here for convenience
+        self.colors = [
+            QColor(),
+            QColor(),
+            QColor(),
+            QColor(),
+            QColor()
+        ]
+        self.colors[0].setRgbF(0.125490, 0.623529, 0.874510, 1.000000)
+        self.colors[1].setRgbF(0.600000, 0.792157, 0.325490, 1.000000)
+        self.colors[2].setRgbF(0.964706, 0.650980, 0.145098, 1.000000)
+        self.colors[3].setRgbF(0.427451, 0.372549, 0.835294, 1.000000)
+        self.colors[4].setRgbF(0.749020, 0.349020, 0.243137, 1.000000)
+
+        #List holding series shown on chart
         self.func_list = [""] #not used
-        self.series_list = [""]
+        self.series_list =  [[]]
+
+        self.legend().hide()
 
     def sceneEvent(self, event: QEvent):
         
@@ -57,7 +71,15 @@ class Chart(QChart):
             series = self.evaluate(func_tree)
             
             #add series to chart and set axes
-            self.addSeries(series)
+            for s in series:
+                s.setColor(self.colors[index % 5])
+
+                pen = s.pen()
+                pen.setWidthF(2.0)
+                s.setPen(pen)
+
+                self.addSeries(s)
+
             self.createDefaultAxes()
             self.series_list[index] = series
         except ValueError as ve:
@@ -65,13 +87,14 @@ class Chart(QChart):
 
     def add_line(self):
         """Append entry to series_list"""
-        self.series_list.append("")
+        self.series_list.append([])
 
     def remove_line(self, index: int, removing_entry: bool = False):
         """Removes series from the chart, and its series_list if removing_entry is set"""
         #Remove series from chart if it has been initialized
-        if self.series_list[index] != "":
-            self.removeSeries(self.series_list[index])
+        if len(self.series_list[index]) != 0:
+            for s in self.series_list[index]:
+                self.removeSeries(s)
 
         #Only pop index from series_list if removing_entry was set
         if (removing_entry):
@@ -82,28 +105,46 @@ class Chart(QChart):
         pass
 
     def evaluate(self, func_tree: Function_tree):
-        """Evaluates func_tree at 1000 points along x-axis"""
+        """Evaluates func_tree at 1001 points along the x-axis"""
         #todo: allow custom x-axis ranges to be used
-        #todo: figure out limits
+        series_arr = []
         series = QLineSeries()
         points = []
-        #calculate 1000 points within range
-        for x in range (-500, 500):
+
+        col = series.color()
+
+        #calculate 1001 points within range
+        for x in range (-500, 501):
             y = func_tree.evaluate(x/100)
 
             if y != None:
+                #Check that asymptote was passed first
+                if (len(points) > 0):
+                    #We can tell if an asymptote was passed if this number is very high and is negative
+                    pol = y * points[len(points)-1].y()
+                    if (abs(pol) > 10000.0 and pol < 0):
+                        series.append(points)
+                        series_arr.append(series)
+
+                        series = QLineSeries()
+                        points = []
+
                 points.append(QPointF(x/100, y))
-            #else:
-            #    if (len(points) > 0):
-            #        points.append(points[len(points)-1])
-            #if (len(points) > 0):
-            #    print(points[len(points)-1])
+
+            #Value returned was None, meaning it attempted to evaluate at undefined value
+            elif (len(points) > 0):
+                series.append(points)
+                series_arr.append(series)
+
+                series = QLineSeries()
+                points = []
+
+            #print(f"{x},{y}")
         
         series.append(points)
-        #series.setBorderColor(QColor(0.0,0.0,0.0,0.0))
-        #series.setMarkerSize(3.0)
-        return series
+        series_arr.append(series)
 
+        return series_arr
 
 class ChartView(QChartView):
     def __init__(self, chart):
@@ -158,6 +199,7 @@ class ChartView(QChartView):
                 self.chart().zoomIn()
             case Qt.Key_Minus:
                 self.chart().zoomOut()
+            #try zoom in qrectf
             case Qt.Key_Up:
                 self.chart().scroll(0, 10)
             case Qt.Key_Down:
