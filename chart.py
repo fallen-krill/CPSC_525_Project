@@ -199,7 +199,8 @@ class ChartView(QChartView):
                 self.chart().zoomIn()
             case Qt.Key_Minus:
                 self.chart().zoomOut()
-            #try zoom in qrectf
+            case Qt.Key_0:
+                self.chart().zoomReset()
             case Qt.Key_Up:
                 self.chart().scroll(0, 10)
             case Qt.Key_Down:
