@@ -1,13 +1,18 @@
+from function_tree import Function_tree
+
 class Page:
     def __init__(self, name="Page"):
         self.name = name
         self.equations = [""]
+        self.function_trees = [Function_tree("")]
 
     def add_equation(self):
         self.equations.append("")
+        self.function_trees.append(Function_tree(""))
 
     def remove_equation(self, index: int):
         self.equations.pop(index)
+        self.function_trees.pop(index)
 
 class Project:
     def __init__(self):

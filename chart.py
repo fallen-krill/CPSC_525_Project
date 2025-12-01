@@ -62,12 +62,11 @@ class Chart(QChart):
 
         return True
 
-    def load_line(self, equation: str, index: int):
+    def load_line(self, func_tree: Function_tree, index: int):
         """Loads result of equation onto the chart and to series_list at given index"""
         #calculate series, add to chart
         try:
             #get function tree from equation, and evaluate it
-            func_tree = Function_tree(equation)
             series = self.evaluate(func_tree)
             
             #add series to chart and set axes
@@ -104,6 +103,20 @@ class Chart(QChart):
     def modify_line(self, equation: str, index: int):
         pass
 
+    # def graph_all(self, page, min_x, max_x):
+
+    #     # remove series from chart on all lines
+    #     for i in range(len(self.series_list)):
+    #         if len(self.series_list[index]) != 0:
+    #             for s in self.series_list[index]:
+    #                 self.removeSeries(s)
+
+    #     self.series_list = []*len(page.equations)
+        
+    #     step = (max_x-min_x)/1000
+        
+    #     for i in range(len(page.equations)):
+            
     def evaluate(self, func_tree: Function_tree):
         """Evaluates func_tree at 1001 points along the x-axis"""
         #todo: allow custom x-axis ranges to be used

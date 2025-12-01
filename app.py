@@ -56,12 +56,12 @@ class EquationEditorWidget(QWidget):
         #chart and function tree list
         self.chart = chart
 
-        for i, equation in enumerate(self.page.equations):
+        for i in range(len(self.page.equations)):
             self.table.insertRow(i)
-            self.table.setItem(i, 0, QTableWidgetItem(equation))
+            self.table.setItem(i, 0, QTableWidgetItem(self.page.equations[i]))
 
             self.chart.add_line()
-            self.chart.load_line(equation, i)
+            self.chart.load_line(self.page.function_trees[i], i)
             
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table_layout = QVBoxLayout()
@@ -104,6 +104,7 @@ class EquationEditorWidget(QWidget):
                 self.add_equation(last_row + 1)
                 self.chart.add_line()
             self.page.equations[item.row()] = text
+            self.page.function_trees[item.row()] = Function_tree(text)
 
         else:
             self.chart.remove_line(item.row())
@@ -111,7 +112,7 @@ class EquationEditorWidget(QWidget):
         if (self.chart.series_list[item.row()] != ""):
             self.chart.remove_line(item.row())
 
-        self.chart.load_line(item.text(), item.row())
+        self.chart.load_line(self.page.function_trees[item.row()], item.row())
 
     @Slot()
     def add_clicked(self):
