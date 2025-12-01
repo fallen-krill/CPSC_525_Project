@@ -117,7 +117,7 @@ class Chart(QChart):
         
     #     for i in range(len(page.equations)):
             
-    def evaluate(self, func_tree: Function_tree):
+    def evaluate(self, func_tree: Function_tree, min_x=-10, min_y=-10, max_x=10, max_y=10):
         """Evaluates func_tree at 1001 points along the x-axis"""
         #todo: allow custom x-axis ranges to be used
         series_arr = []
@@ -126,9 +126,11 @@ class Chart(QChart):
 
         col = series.color()
 
-        #calculate 1001 points within range
-        for x in range (-500, 501):
-            y = func_tree.evaluate(x/100)
+        #calculate 1000 points within range
+        step = (max_x - min_x)/1000.00
+        for i in range(1001):
+            x = min_x + i*step
+            y = func_tree.evaluate(x)
 
             if y != None:
                 #Check that asymptote was passed first
@@ -142,7 +144,7 @@ class Chart(QChart):
                         series = QLineSeries()
                         points = []
 
-                points.append(QPointF(x/100, y))
+                points.append(QPointF(x, y))
 
             #Value returned was None, meaning it attempted to evaluate at undefined value
             elif (len(points) > 0):
