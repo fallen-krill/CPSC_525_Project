@@ -5,7 +5,7 @@ from PySide6.QtCore import (
     Qt, QEvent, QPointF, QRectF
 )
 from PySide6.QtCharts import (
-    QChart, QChartView, QLineSeries, QScatterSeries
+    QChart, QChartView, QLineSeries, QScatterSeries, QValueAxis
 )
 from PySide6.QtGui import (
     QMouseEvent, QKeyEvent, QColor
@@ -99,19 +99,14 @@ class Chart(QChart):
         #Only pop index from series_list if removing_entry was set
         if (removing_entry):
             self.series_list.pop(index)
-
-    #not used, still here just in case
-    def modify_line(self, equation: str, index: int):
-        pass
-
-    def evaluate(self, func_tree: Function_tree):
+            
+    def evaluate(self, func_tree: Function_tree, min_x=-10.0, max_x=10.0, min_y=-10.0, max_y=10.0):
         """Evaluates func_tree at 1001 points along the x-axis"""
-        #todo: allow custom x-axis ranges to be used
         series_arr = []
         series = QLineSeries()
         points = []
 
-        col = series.color()
+        #col = series.color()
 
         #calculate 1001 points within range
         for x in range (-500, 501):
@@ -153,8 +148,20 @@ class ChartView(QChartView):
         self.setRubberBand(QChartView.RectangleRubberBand)
 
         self._isTouching = False
-        self.x_limit = 10
-        self.y_limit = 10
+
+        self.qchart = chart
+        
+        self.y_min = -5.0
+        self.y_max = 5.0
+        self.x_min = -5.0
+        self.x_max = 5.0
+
+        self.y_axis = self.qchart.axisY()
+        self.x_axis = self.qchart.axisX()
+
+        self.y_axis.setRange(self.y_min, self.y_max)
+
+        self.x_axis.setRange(self.x_min, self.x_max)
 
     def viewportEvent(self, event: QEvent):
 
@@ -165,35 +172,33 @@ class ChartView(QChartView):
 
     #all except keypressevent are from https://doc.qt.io/qtforpython-6/examples/example_charts_zoomlinechart.html#example-charts-zoomlinechart
     #they are here for testing
-    #todo:
-    #   -dragging mouse will move graph
-    #   -scroll wheel should zoom in/out
-    def mousePressEvent(self, event: QMouseEvent):
+    #def mousePressEvent(self, event: QMouseEvent):
 
-        if self._isTouching:
-            return
+    #    if self._isTouching:
+    #        return
 
-        return super().mousePressEvent(event)
+    #    return super().mousePressEvent(event)
 
-    def mouseMoveEvent(self, event: QMouseEvent):
+    #def mouseMoveEvent(self, event: QMouseEvent):
 
-        if self._isTouching:
-            return
+    #    if self._isTouching:
+    #        return
 
-        return super().mouseMoveEvent(event)
+    #    return super().mouseMoveEvent(event)
 
-    def mouseReleaseEvent(self, event: QMouseEvent):
+    #def mouseReleaseEvent(self, event: QMouseEvent):
 
-        if self._isTouching:
-            self._isTouching = False
+    #    if self._isTouching:
+    #        self._isTouching = False
 
-        self.chart().setAnimationOptions(QChart.SeriesAnimations)
+    #    self.chart().setAnimationOptions(QChart.SeriesAnimations)
 
-        return super().mouseReleaseEvent(event)
+    #    return super().mouseReleaseEvent(event)
     
     def keyPressEvent(self, event: QKeyEvent):
 
         key = event.key()
+        self.chart().setAnimationOptions(QChart.SeriesAnimations)
         match(key):
             case Qt.Key_Equal:
                 self.chart().zoomIn()
