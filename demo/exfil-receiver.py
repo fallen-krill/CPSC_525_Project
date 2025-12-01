@@ -14,14 +14,13 @@ def client(client_socket: socket, client_addr):
         data = b''  #bytestring, will contain bytestring sent by client
         i = 0       #file number written
         while True:
-            request_data = client_socket.recv(4096) #no need to decode, we are writing binary data
+            request_data = client_socket.recv(CHUNK) #no need to decode, we are writing binary data
 
             #stop receiving if client has sent all data available to it
             if not request_data:
                 break
             
             data += request_data
-            #print(request_data)
 
             #eof reached if length of received data is less than chunk size
             if (len(request_data) < CHUNK):
@@ -38,8 +37,8 @@ def client(client_socket: socket, client_addr):
             response = "ack"
             client_socket.send(response.encode())
 
-    except:
-        return
+    except Exception as e:
+        print(e)
     
     #close client socket
     finally:
@@ -52,7 +51,7 @@ def start():
         server_socket.bind((HOST, PORT))
         server_socket.listen()
 
-        #run until process is interrupted (does not work on windows)
+        #run until process is interrupted (ctrl+c does not work on windows)
         while True:
             try:
                 client_socket, client_addr = server_socket.accept()
