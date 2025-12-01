@@ -34,9 +34,13 @@ class Chart(QChart):
         self.colors[3].setRgbF(0.427451, 0.372549, 0.835294, 1.000000)
         self.colors[4].setRgbF(0.749020, 0.349020, 0.243137, 1.000000)
 
-        #List holding series shown on chart
-        self.func_list = [""] #not used
-        self.series_list =  [[]]
+        self.func_list = []         #holds equations (NOT USED yet)
+        self.series_list =  [[]]    #holds series shown on chart
+
+        self.y_min = -10.0
+        self.y_max = 10.0
+        self.x_min = -10.0
+        self.x_max = 10.0
 
         self.legend().hide()
 
@@ -81,7 +85,15 @@ class Chart(QChart):
                 self.addSeries(s)
 
             self.createDefaultAxes()
+
+            y_axis = self.axisY()
+            x_axis = self.axisX()
+
+            y_axis.setRange(self.y_min, self.y_max)
+            x_axis.setRange(self.x_min, self.x_max)
+
             self.series_list[index] = series
+
         except ValueError as ve:
             print("ValueError exception:", ve)
 
@@ -100,16 +112,16 @@ class Chart(QChart):
         if (removing_entry):
             self.series_list.pop(index)
             
-    def evaluate(self, func_tree: Function_tree, min_x=-10.0, max_x=10.0, min_y=-10.0, max_y=10.0):
+    def evaluate(self, func_tree: Function_tree):
         """Evaluates func_tree at 1001 points along the x-axis"""
         series_arr = []
         series = QLineSeries()
         points = []
 
-        #col = series.color()
-
         #calculate 1001 points within range
-        for x in range (-500, 501):
+        #step = (self.max_x - self.min_x) / 1001.0
+        for x in range (-1000, 1001):
+            #x = self.min_x + (step * i)
             y = func_tree.evaluate(x/100)
 
             if y != None:
@@ -133,8 +145,6 @@ class Chart(QChart):
 
                 series = QLineSeries()
                 points = []
-
-            #print(f"{x},{y}")
         
         series.append(points)
         series_arr.append(series)
@@ -144,62 +154,15 @@ class Chart(QChart):
 class ChartView(QChartView):
     def __init__(self, chart):
         super().__init__(chart)
-        
-        self.setRubberBand(QChartView.RectangleRubberBand)
-
-        self._isTouching = False
 
         self.qchart = chart
-        
-        self.y_min = -5.0
-        self.y_max = 5.0
-        self.x_min = -5.0
-        self.x_max = 5.0
-
-        self.y_axis = self.qchart.axisY()
-        self.x_axis = self.qchart.axisX()
-
-        self.y_axis.setRange(self.y_min, self.y_max)
-
-        self.x_axis.setRange(self.x_min, self.x_max)
-
-    def viewportEvent(self, event: QEvent):
-
-        if event == QMouseEvent.TouchBegin:
-            self._isTouching = True
-        
-        return super().viewportEvent(event)
-
-    #all except keypressevent are from https://doc.qt.io/qtforpython-6/examples/example_charts_zoomlinechart.html#example-charts-zoomlinechart
-    #they are here for testing
-    #def mousePressEvent(self, event: QMouseEvent):
-
-    #    if self._isTouching:
-    #        return
-
-    #    return super().mousePressEvent(event)
-
-    #def mouseMoveEvent(self, event: QMouseEvent):
-
-    #    if self._isTouching:
-    #        return
-
-    #    return super().mouseMoveEvent(event)
-
-    #def mouseReleaseEvent(self, event: QMouseEvent):
-
-    #    if self._isTouching:
-    #        self._isTouching = False
-
-    #    self.chart().setAnimationOptions(QChart.SeriesAnimations)
-
-    #    return super().mouseReleaseEvent(event)
     
     def keyPressEvent(self, event: QKeyEvent):
 
         key = event.key()
         self.chart().setAnimationOptions(QChart.SeriesAnimations)
         match(key):
+            #need to set max/min axis values on chart, re-evaluate accordingly
             case Qt.Key_Equal:
                 self.chart().zoomIn()
             case Qt.Key_Minus:
