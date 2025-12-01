@@ -10,6 +10,14 @@ class Page:
         self.equations.append("")
         self.function_trees.append(Function_tree(""))
 
+    def add_equation_text(self, text):
+        if self.equations[0] == "":
+            self.equations[0] = text
+            self.function_trees[0] = Function_tree(text)
+        else:
+            self.equations.append(text)
+            self.function_trees.append(Function_tree(text))
+
     def remove_equation(self, index: int):
         self.equations.pop(index)
         self.function_trees.pop(index)

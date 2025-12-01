@@ -1,7 +1,7 @@
 import math
 import sys
 from project import Page, Project
-from serialize import load, save
+from serialize import serialize, deserialize, json_save, json_load
 from PySide6.QtCore import (
     QPoint, QPointF, QRect, Slot, Qt, QSize
 )
@@ -262,18 +262,24 @@ class MainWindow(QMainWindow):
     def open_file(self):
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        dialog.setNameFilter("Graph Projects (*.pkl)")
+        #dialog.setNameFilter("Graph Projects (*.pkl)")
         # dialog.setDirectory()
         fileName = ""
         if dialog.exec():
             fileName = dialog.selectedFiles()[0]
 
-        self.change_project(load(fileName))
+        #self.change_project(deserialize(fileName))
+
+        # bug fix
+        self.change_project(json_load(fileName))
 
     @Slot()
     def save_file(self):
         fileName = QFileDialog.getSaveFileName()
-        save(fileName[0], self.project)
+        #serialize(fileName[0], self.project)
+
+        # bug fix
+        json_save(fileName[0], self.project)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
