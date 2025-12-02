@@ -221,6 +221,12 @@ class ChartView(QChartView):
 
         key = event.key()
         self.chart().setAnimationOptions(QChart.SeriesAnimations)
+
+        x_min = self.qchart.axisX().min()
+        x_max = self.qchart.axisX().max()
+        y_min = self.qchart.axisY().min()
+        y_max = self.qchart.axisY().max()
+
         match(key):
             #need to set max/min axis values on chart, re-evaluate accordingly
             case Qt.Key_Equal:
@@ -229,18 +235,27 @@ class ChartView(QChartView):
                 self.chart().zoomOut()
             case Qt.Key_0:
                 self.chart().zoomReset()
+                x_min = -10.0
+                x_max = 10.0
+                y_min = -10.0
+                y_max = 10.0
             case Qt.Key_Up:
                 self.chart().scroll(0, 10)
+                y_min = self.qchart.axisY().min()
+                y_max = self.qchart.axisY().max()
             case Qt.Key_Down:
                 self.chart().scroll(0, -10)
+                y_min = self.qchart.axisY().min()
+                y_max = self.qchart.axisY().max()
             case Qt.Key_Left:
                 self.chart().scroll(-10, 0)
+                x_min = self.qchart.axisX().min()
+                x_max = self.qchart.axisX().max()
             case Qt.Key_Right:
                 self.chart().scroll(10, 0)
+                x_min = self.qchart.axisX().min()
+                x_max = self.qchart.axisX().max()
             case _:
                 pass
 
-        self.qchart.regraph(self.qchart.axisX().min(), 
-                            self.qchart.axisX().max(), 
-                            self.qchart.axisY().min(), 
-                            self.qchart.axisY().max())
+        self.qchart.regraph(x_min, x_max, y_min, y_max)
