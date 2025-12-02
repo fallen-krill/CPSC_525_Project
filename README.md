@@ -33,6 +33,8 @@ The server, `demo/exfil-receiver.py`, can be run at any time, and will wait inde
 
 -/=: Zoom out/in
 
+0: Reset graph view
+
 Arrow keys: Scroll graph
 
 ---
