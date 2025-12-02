@@ -26,7 +26,7 @@ This uses a socket-based server and client to copy the .pkl project file data fr
 
 The client is contained as executable code within an untrusted .pkl file, created by running `exploitexfil.py`. When loaded, it will connect to the server and send the contents of every .pkl file in the app directory.
 
-The server can be run at any time, and will wait indefinitely for a connection. Once a connection is established, it will write the file data it receives to a new .pkl file in the server's local directory.
+The server, `demo/exfil-receiver.py`, can be run at any time, and will wait indefinitely for a connection. Once a connection is established, it will write the file data it receives to a new .pkl file in the server's local directory.
 
 ---
 ### Controls
@@ -62,7 +62,7 @@ $ source venv/bin/activate
 ```
 
 ---
-### Running the Attack Code (Warning: Flashing Lights)
+### Running the Attack Code
 
 Run exploitexfil.py to create a file called `malicious.pkl`:
 ```
