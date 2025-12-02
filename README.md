@@ -3,7 +3,37 @@
 
 ### Coding Portion
 
-`todo: high level description of your code and exploit (~1 paragraph, can be bulleted)`
+**Application**
+
+This is a simple GUI graphing calculator written with Python, using PySide6 (Qt). The user can:
+- Add and remove supported mathematical functions of x
+- Group functions into separate pages / tabs.
+- Save and load projects, containing currently open pages and their functions, using binary serialization.
+
+Supported functions:
+- Operations (+, -, *, /, ^)
+- Trigonometric (sin, cos, tan, csc, sec, cot, asin, acos, atan)
+- Logarithmic (log, log_, ln)
+- Square root (sqrt)
+- Factorial (!)
+- Constants (pi, e)
+
+A fixed version of the app which serializes using JSON instead of binary can be found on the `restructured-graphing` branch.
+
+**Attack code**
+
+This uses a socket-based server and client to copy the .pkl project file data from the app directory. 
+
+The client is contained as executable code within an untrusted .pkl file, created by running `exploitexfil.py`. When loaded, it will connect to the server and send the contents of every .pkl file in the app directory.
+
+The server can be run at any time, and will wait indefinitely for a connection. Once a connection is established, it will write the file data it receives to a new .pkl file in the server's local directory.
+
+---
+### Controls
+
+-/=: Zoom out/in
+
+Arrow keys: Scroll graph
 
 ---
 
@@ -43,15 +73,5 @@ Before loading the newly created file, run exfil-receiver.py, located in demo. A
 ```
 $ python demo/exfil-receiver.py
 ```
-
-This file contains code that can be executed if loaded by the app, done by clicking File > Open.
-
----
-
-Run the attack code (Flashing window):
-```
-$ python exploitwindow.py
-```
-A file called `malicious.pkl` should appear if the script runs successfully.
 
 This file contains code that can be executed if loaded by the app, done by clicking File > Open.
