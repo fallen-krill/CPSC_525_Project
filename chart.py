@@ -17,8 +17,8 @@ class Chart(QChart):
 
         super().__init__()
 
-        self.grabGesture(Qt.PanGesture)
-        self.grabGesture(Qt.PinchGesture)
+        #self.grabGesture(Qt.PanGesture)
+        #self.grabGesture(Qt.PinchGesture)
 
         #The default colors used by QXYSeries when none are specified, copied here for convenience
         self.colors = [
@@ -34,9 +34,10 @@ class Chart(QChart):
         self.colors[3].setRgbF(0.427451, 0.372549, 0.835294, 1.000000)
         self.colors[4].setRgbF(0.749020, 0.349020, 0.243137, 1.000000)
 
-        self.func_list = []         #holds equations (NOT USED yet)
+        self.func_list = []         #holds equations
         self.series_list =  [[]]    #holds series shown on chart
 
+        #min/max values for both x and y axes
         self.y_min = -10.0
         self.y_max = 10.0
         self.x_min = -10.0
@@ -44,27 +45,28 @@ class Chart(QChart):
 
         self.legend().hide()
 
-    def sceneEvent(self, event: QEvent):
+    #not needed afaik
+    #def sceneEvent(self, event: QEvent):
         
-        if event.type() == QEvent.Gesture:
-            return self.gestureEvent(event)
+    #    if event.type() == QEvent.Gesture:
+    #        return self.gestureEvent(event)
         
-        return super().sceneEvent(event)
+    #    return super().sceneEvent(event)
     
-    def gestureEvent(self, event: QGestureEvent):
+    #def gestureEvent(self, event: QGestureEvent):
 
-        if gesture := event.gesture(Qt.PanGesture):
-            print("panning")
-            pan = gesture
-            self.scroll(-pan.delta().x(), pan.delta().y())
+    #    if gesture := event.gesture(Qt.PanGesture):
+    #        print("panning")
+    #        pan = gesture
+    #        self.scroll(-pan.delta().x(), pan.delta().y())
 
-        if gesture := event.gesture(Qt.PinchGesture):
-            print("pinching")
-            pinch = gesture
-            if pinch.changeFlags() & QGesture.QPinchGesture.ScaleFactorChanged:
-                self.zoom(pinch.scaleFactor())
+    #    if gesture := event.gesture(Qt.PinchGesture):
+    #        print("pinching")
+    #        pinch = gesture
+    #        if pinch.changeFlags() & QGesture.QPinchGesture.ScaleFactorChanged:
+    #            self.zoom(pinch.scaleFactor())
 
-        return True
+    #    return True
 
     def load_line(self, equation: str, index: int):
         """Loads result of equation onto the chart and to series_list at given index"""
@@ -76,14 +78,17 @@ class Chart(QChart):
             
             #add series to chart and set axes
             for s in series:
+                #get color of the series, based off on of the default colors used by QXYSeries/QLineSeries
                 s.setColor(self.colors[index % 5])
 
+                #set width of pen, directly changing the QLineSeries would not work as intended
                 pen = s.pen()
-                pen.setWidthF(2.0)
+                pen.setWidthF(2.0) 
                 s.setPen(pen)
 
                 self.addSeries(s)
 
+            #set x/y axis range so series can render as intended
             self.createDefaultAxes()
 
             y_axis = self.axisY()
@@ -92,6 +97,8 @@ class Chart(QChart):
             y_axis.setRange(self.y_min, self.y_max)
             x_axis.setRange(self.x_min, self.x_max)
 
+            #record equation and series
+            self.func_list[index] = equation
             self.series_list[index] = series
 
         except ValueError as ve:
@@ -99,6 +106,7 @@ class Chart(QChart):
 
     def add_line(self):
         """Append entry to series_list"""
+        self.func_list.append("")
         self.series_list.append([])
 
     def remove_line(self, index: int, removing_entry: bool = False):
@@ -110,7 +118,10 @@ class Chart(QChart):
 
         #Only pop index from series_list if removing_entry was set
         if (removing_entry):
+            self.func_list.pop(index)
             self.series_list.pop(index)
+        else:
+            self.func_list[index] = ""
             
     def evaluate(self, func_tree: Function_tree):
         """Evaluates func_tree at 1001 points along the x-axis"""
@@ -119,15 +130,16 @@ class Chart(QChart):
         points = []
 
         #calculate 1001 points within range
-        #step = (self.max_x - self.min_x) / 1001.0
-        for x in range (-1000, 1001):
-            #x = self.min_x + (step * i)
-            y = func_tree.evaluate(x/100)
+        step = (self.x_max - self.x_min) / 1000.0
+        for i in range(1001):
+            x = self.x_min + (step * i)
+            y = func_tree.evaluate(x)
 
             if y != None:
                 #Check that asymptote was passed first
                 if (len(points) > 0):
                     #We can tell if an asymptote was passed if this number is very high and is negative
+                    #issue: does not work perfectly now that range is malleable
                     pol = y * points[len(points)-1].y()
                     if (abs(pol) > 10000.0 and pol < 0):
                         series.append(points)
@@ -136,7 +148,7 @@ class Chart(QChart):
                         series = QLineSeries()
                         points = []
 
-                points.append(QPointF(x/100, y))
+                points.append(QPointF(x, y))
 
             #Value returned was None, meaning it attempted to evaluate at undefined value
             elif (len(points) > 0):
@@ -150,6 +162,54 @@ class Chart(QChart):
         series_arr.append(series)
 
         return series_arr
+    
+    def regraph(self, x_min=-10.0, x_max=10.0, y_min=-10.0, y_max=10.0):
+        """Reloads all functions currently on the graph. Called with user input in ChartView."""
+        #set min/max of each axis
+        self.y_min = y_min
+        self.y_max = y_max
+        self.x_min = x_min
+        self.x_max = x_max
+
+        #reload each function
+        for i in range(len(self.func_list)):
+
+            #evaluate function tree again with new range
+            equation = self.func_list[i]
+            func_tree = Function_tree(equation)
+            series = self.evaluate(func_tree)
+
+            color = QColor()
+
+            #remove series and get its color
+            if (len(self.series_list[i]) != 0):
+                for s in self.series_list[i]:
+                    self.removeSeries(s)
+
+                color = self.series_list[i][0].color()
+
+            #add series and set its color
+            for s in series:
+                s.setColor(color)
+
+                pen = s.pen()
+                pen.setWidthF(2.0)
+                s.setPen(pen)
+                
+                self.addSeries(s)
+
+            #replace recorded series
+            self.series_list[i] = series
+
+        #set x/y axis range so series can render as intended
+        self.createDefaultAxes()
+
+        y_axis = self.axisY()
+        x_axis = self.axisX()
+
+        y_axis.setRange(self.y_min, self.y_max)
+        x_axis.setRange(self.x_min, self.x_max)
+        
 
 class ChartView(QChartView):
     def __init__(self, chart):
@@ -179,3 +239,8 @@ class ChartView(QChartView):
                 self.chart().scroll(10, 0)
             case _:
                 pass
+
+        self.qchart.regraph(self.qchart.axisX().min(), 
+                            self.qchart.axisX().max(), 
+                            self.qchart.axisY().min(), 
+                            self.qchart.axisY().max())
