@@ -18,7 +18,7 @@ Supported functions:
 - Factorial (!)
 - Constants (pi, e)
 
-A fixed version of the app which serializes using JSON instead of binary can be found on the `restructured-graphing` branch.
+A fixed version of the app which uses JSON serialization instead of binary can be found on the `restructured-graphing` branch.
 
 **Attack code**
 
