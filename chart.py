@@ -45,28 +45,33 @@ class Chart(QChart):
 
         self.legend().hide()
 
-    #not needed afaik
-    #def sceneEvent(self, event: QEvent):
-        
-    #    if event.type() == QEvent.Gesture:
-    #        return self.gestureEvent(event)
-        
-    #    return super().sceneEvent(event)
-    
-    #def gestureEvent(self, event: QGestureEvent):
+        #lines at x=0 and y=0
+        self.y_line = QLineSeries()
+        self.x_line = QLineSeries()
 
-    #    if gesture := event.gesture(Qt.PanGesture):
-    #        print("panning")
-    #        pan = gesture
-    #        self.scroll(-pan.delta().x(), pan.delta().y())
+        self.axis_col = QColor()
+        self.axis_col.setRgbF(0.55,0.55,0.55,1.0)
 
-    #    if gesture := event.gesture(Qt.PinchGesture):
-    #        print("pinching")
-    #        pinch = gesture
-    #        if pinch.changeFlags() & QGesture.QPinchGesture.ScaleFactorChanged:
-    #            self.zoom(pinch.scaleFactor())
+        self.update_axis_lines()
 
-    #    return True
+        self.addSeries(self.y_line)
+        self.addSeries(self.x_line)
+
+    def update_axis_lines(self):
+        """Updates lines at x=0 and y=0"""
+        #Clear points
+        self.y_line.clear()
+        self.x_line.clear()
+
+        #Set lines to start and end at the edge of the chart
+        self.y_line.append(0.0, self.y_min)
+        self.y_line.append(0.0, self.y_max)
+        self.x_line.append(self.x_min, 0.0)
+        self.x_line.append(self.x_max, 0.0)
+
+        #set line color, thickness does not matter
+        self.y_line.setColor(self.axis_col)
+        self.x_line.setColor(self.axis_col)
 
     def load_line(self, equation: str, index: int):
         """Loads result of equation onto the chart and to series_list at given index"""
@@ -139,9 +144,8 @@ class Chart(QChart):
                 #Check that asymptote was passed first
                 if (len(points) > 0):
                     #We can tell if an asymptote was passed if this number is very high and is negative
-                    #issue: does not work perfectly now that range is malleable
                     pol = y * points[len(points)-1].y()
-                    if (abs(pol) > 10000.0 and pol < 0):
+                    if (abs(pol) > (self.y_max - self.y_min) and pol < 0):
                         series.append(points)
                         series_arr.append(series)
 
@@ -170,6 +174,8 @@ class Chart(QChart):
         self.y_max = y_max
         self.x_min = x_min
         self.x_max = x_max
+
+        self.update_axis_lines()
 
         #reload each function
         for i in range(len(self.func_list)):
@@ -218,9 +224,9 @@ class ChartView(QChartView):
         self.qchart = chart
     
     def keyPressEvent(self, event: QKeyEvent):
-
+        """Handles key input"""
         key = event.key()
-        self.chart().setAnimationOptions(QChart.SeriesAnimations)
+        #self.chart().setAnimationOptions(QChart.SeriesAnimations)
 
         x_min = self.qchart.axisX().min()
         x_max = self.qchart.axisX().max()
@@ -228,37 +234,43 @@ class ChartView(QChartView):
         y_max = self.qchart.axisY().max()
 
         match(key):
-            #need to set max/min axis values on chart, re-evaluate accordingly
+            #Zoom in
             case Qt.Key_Equal:
                 self.chart().zoomIn()
                 x_min = self.qchart.axisX().min()
                 x_max = self.qchart.axisX().max()
                 y_min = self.qchart.axisY().min()
                 y_max = self.qchart.axisY().max()
+            #Zoom out
             case Qt.Key_Minus:
                 self.chart().zoomOut()
                 x_min = self.qchart.axisX().min()
                 x_max = self.qchart.axisX().max()
                 y_min = self.qchart.axisY().min()
                 y_max = self.qchart.axisY().max()
+            #Reset zoom to [-10,10] on x/y axis
             case Qt.Key_0:
                 self.chart().zoomReset()
                 x_min = -10.0
                 x_max = 10.0
                 y_min = -10.0
                 y_max = 10.0
+            #Scroll up
             case Qt.Key_Up:
                 self.chart().scroll(0, 10)
                 y_min = self.qchart.axisY().min()
                 y_max = self.qchart.axisY().max()
+            #Scroll down
             case Qt.Key_Down:
                 self.chart().scroll(0, -10)
                 y_min = self.qchart.axisY().min()
                 y_max = self.qchart.axisY().max()
+            #Scroll left
             case Qt.Key_Left:
                 self.chart().scroll(-10, 0)
                 x_min = self.qchart.axisX().min()
                 x_max = self.qchart.axisX().max()
+            #Scroll right
             case Qt.Key_Right:
                 self.chart().scroll(10, 0)
                 x_min = self.qchart.axisX().min()
