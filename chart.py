@@ -231,8 +231,16 @@ class ChartView(QChartView):
             #need to set max/min axis values on chart, re-evaluate accordingly
             case Qt.Key_Equal:
                 self.chart().zoomIn()
+                x_min = self.qchart.axisX().min()
+                x_max = self.qchart.axisX().max()
+                y_min = self.qchart.axisY().min()
+                y_max = self.qchart.axisY().max()
             case Qt.Key_Minus:
                 self.chart().zoomOut()
+                x_min = self.qchart.axisX().min()
+                x_max = self.qchart.axisX().max()
+                y_min = self.qchart.axisY().min()
+                y_max = self.qchart.axisY().max()
             case Qt.Key_0:
                 self.chart().zoomReset()
                 x_min = -10.0
