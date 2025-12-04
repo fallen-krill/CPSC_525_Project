@@ -11,9 +11,9 @@
 \#*\#
 .\#*
 
-/__pycache__
-__pycache__/**
+application/__pycache__
+application/__pycache__/**
 
 # graph files
-*.pkl
-*.json
+**/*.pkl
+**/*.json

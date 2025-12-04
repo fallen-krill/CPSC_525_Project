@@ -54,20 +54,33 @@ $ pip install PySide6
 ```
 Then, run app.py.
 ```
-$ python app.py
+$ python3 ./application/app.py
+```
+or
+```
+$ cd application
+$ python3\ app.py
 ```
 
 **Option 2: Running through a virtual environment**
 
 If you cannot install PySide6 directly using pip, as is the case on some Linux distributions and the MS computers, you can instead create a virtual environment.
+
+The simplest way to do this is
 ```
-$ cd CPSC_525_Project
-$ python -m venv ./venv
+cd CPSC_525_Project
+./run.sh
+```
+You may have to give it execute permissions, and this script will only work if it is run from the project's main directory.
+
+You can run it using a virtual environment, manually, as follows:
+```
+$ cd CPSC_525_Project/application
+$ python3 -m venv ./venv
 $ source venv/bin/activate
 (venv) $ pip install PySide6
-(venv) $ python app.py
+(venv) $ python3 application/app.py
 ```
-
 ---
 ### Running the Attack Code
 

@@ -29,7 +29,7 @@ from function_tree import (
 class PageRenameDialog(QDialog):
     def __init__(self, name: str):
         super().__init__(modal=True)
-        self.text = QLabel("Edit page name.", self)
+        self.text = QLabel("Graphing Calculator", self)
         self.text_input = QLineEdit(self, text=name)
         self.buttons = QDialogButtonBox(Qt.Orientation.Horizontal, self)
         self.buttons.addButton("Ok", QDialogButtonBox.ButtonRole.AcceptRole)
@@ -51,7 +51,6 @@ class EquationEditorWidget(QWidget):
         # table for equations
         self.table = QTableWidget(0, 1, self)
         self.table.setHorizontalHeaderLabels(["Equation"])
-        # self.table.setItem(0,0,QTableWidgetItem("thththt"))
 
         #chart and function tree list
         self.chart = chart
@@ -212,6 +211,10 @@ class TabContainerWidget(QWidget):
         self.tabs.addTab(WorkspaceWidget(page), page.name)
         self.tabs.setCurrentIndex(self.tabs.count()-1)
 
+    @Slot()
+    def close_app(self):
+        sys.exit(0)
+
 class MainWindow(QMainWindow):
     def __init__(self, widget: TabContainerWidget, project: Project):
         super().__init__()
@@ -231,6 +234,9 @@ class MainWindow(QMainWindow):
         self.newPageAction = QAction("New Page", self)
         self.newPageAction.triggered.connect(widget.add_page)
 
+        self.closeAction = QAction("Exit", self)
+        self.closeAction.triggered.connect(widget.close_app)
+        
         # creating menu bar
         menu = self.menuBar()
 
@@ -239,6 +245,7 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(self.openAction)
         fileMenu.addAction(self.saveAction)
         fileMenu.addAction(self.newPageAction)
+        fileMenu.addAction(self.closeAction)
 
         self.mainContent = widget
         self.setCentralWidget(widget)
