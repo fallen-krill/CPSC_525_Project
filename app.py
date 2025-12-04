@@ -1,7 +1,7 @@
 import math
 import sys
 from project import Page, Project
-from serialize import load, save
+from serialize import serialize, deserialize
 from PySide6.QtCore import (
     QPoint, QPointF, QRect, Slot, Qt, QSize
 )
@@ -56,12 +56,12 @@ class EquationEditorWidget(QWidget):
         #chart and function tree list
         self.chart = chart
 
-        for i, equation in enumerate(self.page.equations):
+        for i in range(len(self.page.equations)):
             self.table.insertRow(i)
-            self.table.setItem(i, 0, QTableWidgetItem(equation))
+            self.table.setItem(i, 0, QTableWidgetItem(self.page.equations[i]))
 
             self.chart.add_line()
-            self.chart.load_line(equation, i)
+            self.chart.load_line(self.page, i)
             
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table_layout = QVBoxLayout()
@@ -90,6 +90,7 @@ class EquationEditorWidget(QWidget):
         self.page.add_equation()
 
     def remove_equation(self, index: int):
+        """This is not the same data structure as the one in chart.py."""
         self.table.removeRow(index)
         self.page.remove_equation(index)
 
@@ -104,6 +105,7 @@ class EquationEditorWidget(QWidget):
                 self.add_equation(last_row + 1)
                 self.chart.add_line()
             self.page.equations[item.row()] = text
+            self.page.function_trees[item.row()] = Function_tree(text)
 
         else:
             self.chart.remove_line(item.row())
@@ -111,7 +113,7 @@ class EquationEditorWidget(QWidget):
         if (self.chart.series_list[item.row()] != ""):
             self.chart.remove_line(item.row())
 
-        self.chart.load_line(item.text(), item.row())
+        self.chart.load_line(self.page, item.row())
 
     @Slot()
     def add_clicked(self):
@@ -133,11 +135,6 @@ class WorkspaceWidget(QWidget):
 
         # equation editor
         self.equation_editor = EquationEditorWidget(page, chart)
-
-        # graphics scene
-        #self.scene = QGraphicsScene()
-        #self.scene.setBackgroundBrush(QColor('blue')) # coloured to show where scene is
-        #self.img = None
 
         # graphics view
         #self.graph = QGraphicsView(self.scene)
@@ -210,6 +207,7 @@ class TabContainerWidget(QWidget):
 
     @Slot()
     def add_page(self):
+        """Add another page to this project."""
         page = self.project.add_page()
         self.tabs.addTab(WorkspaceWidget(page), page.name)
         self.tabs.setCurrentIndex(self.tabs.count()-1)
@@ -246,6 +244,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
 
     def change_project(self, new_project: Project):
+        """Abandon this project and start a new one."""
         self.project = new_project
         self.mainContent = TabContainerWidget(self.project)
         self.newPageAction.triggered.connect(self.mainContent.add_page)
@@ -261,18 +260,21 @@ class MainWindow(QMainWindow):
     def open_file(self):
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        dialog.setNameFilter("Graph Projects (*.pkl)")
+        #dialog.setNameFilter("Graph Projects (*.pkl)")
         # dialog.setDirectory()
         fileName = ""
         if dialog.exec():
             fileName = dialog.selectedFiles()[0]
 
-        self.change_project(load(fileName))
+        # The bug is in serialize.py and the fix is there
+        self.change_project(deserialize(fileName))
 
     @Slot()
     def save_file(self):
         fileName = QFileDialog.getSaveFileName()
-        save(fileName[0], self.project)
+        
+        # The bug is in serialize.py the fix is there
+        serialize(fileName[0], self.project)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

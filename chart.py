@@ -10,6 +10,7 @@ from PySide6.QtCharts import (
 from PySide6.QtGui import (
     QMouseEvent, QKeyEvent, QColor
 )
+from project import Page
 from function_tree import Function_tree
 
 class Chart(QChart):
@@ -73,13 +74,12 @@ class Chart(QChart):
         self.y_line.setColor(self.axis_col)
         self.x_line.setColor(self.axis_col)
 
-    def load_line(self, equation: str, index: int):
-        """Loads result of equation onto the chart and to series_list at given index"""
+    def load_line(self, page: Page, index: int):
+        """Loads result of (precomputed) function tree onto the chart and to series_list at given index"""
         #calculate series, add to chart
         try:
-            #get function tree from equation, and evaluate it
-            func_tree = Function_tree(equation)
-            series = self.evaluate(func_tree)
+            #Function tree is passed, so evaluate it
+            series = self.evaluate(page.function_trees[index])
             
             #add series to chart and set axes
             for s in series:
@@ -103,7 +103,7 @@ class Chart(QChart):
             x_axis.setRange(self.x_min, self.x_max)
 
             #record equation and series
-            self.func_list[index] = equation
+            self.func_list[index] = page.equations[index]
             self.series_list[index] = series
 
         except ValueError as ve:
@@ -125,19 +125,20 @@ class Chart(QChart):
         if (removing_entry):
             self.func_list.pop(index)
             self.series_list.pop(index)
-        else:
-            self.func_list[index] = ""
+
             
-    def evaluate(self, func_tree: Function_tree):
-        """Evaluates func_tree at 1001 points along the x-axis"""
+    def evaluate(self, func_tree: Function_tree, min_x=-10, min_y=-10, max_x=10, max_y=10):
+        """Evaluates func_tree at 1001 points along the x-axis and returns list of points."""
         series_arr = []
         series = QLineSeries()
         points = []
 
-        #calculate 1001 points within range
-        step = (self.x_max - self.x_min) / 1000.0
+        col = series.color()
+
+        #calculate 1000 points within range
+        step = (max_x - min_x)/1000.00
         for i in range(1001):
-            x = self.x_min + (step * i)
+            x = min_x + i*step
             y = func_tree.evaluate(x)
 
             if y != None:
@@ -169,6 +170,7 @@ class Chart(QChart):
     
     def regraph(self, x_min=-10.0, x_max=10.0, y_min=-10.0, y_max=10.0):
         """Reloads all functions currently on the graph. Called with user input in ChartView."""
+        
         #set min/max of each axis
         self.y_min = y_min
         self.y_max = y_max
