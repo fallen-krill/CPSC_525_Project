@@ -1,10 +1,12 @@
 import pickle
 
 def save(fname, data):
-    """serializes data given to it and writes to a file
-    returns 1 if write was successful
-    returns 0 otherwise"""
-
+    """Serializes given data and saves it to a file given by fname as a path.
+    The file will be overwritten if it already exists. Otherwise, a new file
+    is created.
+    Returns 1 if write was successful
+    Returns 0 otherwise"""
+    
     #convert to pickled bytes object
     serialized_data = pickle.dumps(data)
 
@@ -20,10 +22,10 @@ def save(fname, data):
     return 1
 
 def load(fname):
-    """deserializes data read from a file
-    returns deserialized data if read was successful
-    returns None otherwise"""
-
+    """Deserializes data from file, given by fname as a path.
+    Returns deserialized data if read was successful
+    Returns None otherwise"""
+    
     #load file
     try:
         with open(fname, "rb") as f:
