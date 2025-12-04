@@ -18,6 +18,13 @@ Supported functions:
 - Factorial (!)
 - Constants (pi, e)
 
+** Note on order of operations and valid input **
+- It's as you would expect for BEDMAS, but between `()` and `^`, the order is `()`->`!`->`function evaluation`->`^`.
+- Essentially, this means that the `!` applies to what was immediately before it, and a `^` will evaluate after the function is computed.
+- For example: `cos x!` is `cos(x!)`, and `cos x^2` is `(cos x)^2`
+- You do not need to enter brackets; the application is able to tell when juxtaposition is multiplication and when it's an argument.
+- Similarly to LaTeX commands, purely alphabetical strings will be considered as one token, so `cosx` is nonsense, but `cos x` is fine.
+
 A fixed version of the app which uses JSON serialization instead of binary can be found on the `restructured-graphing` branch.
 
 **Attack code**
