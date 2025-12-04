@@ -2,17 +2,20 @@
 
 /venv
 .venv
-*.jpg
-*.JPG
+**/.venv
+**/venv
+
+**/*.jpg
+**/*.JPG
 
 # emacs autosaves
-'#*#'
-*~
-\#*\#
-.\#*
+**/'#*#'
+**/*~
+**/\#*\#
+**/.\#*
 
-application/__pycache__
-application/__pycache__/**
+**/__pycache__
+**/__pycache__/**
 
 # graph files
 **/*.pkl
