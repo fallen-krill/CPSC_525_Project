@@ -51,7 +51,6 @@ class EquationEditorWidget(QWidget):
         # table for equations
         self.table = QTableWidget(0, 1, self)
         self.table.setHorizontalHeaderLabels(["Equation"])
-        # self.table.setItem(0,0,QTableWidgetItem("thththt"))
 
         #chart and function tree list
         self.chart = chart
@@ -124,6 +123,7 @@ class EquationEditorWidget(QWidget):
 
 
 class WorkspaceWidget(QWidget):
+    """Holds equation editor and graph in a splitter."""
     def __init__(self, page: Page):
         super().__init__()
         self.page = page
@@ -134,11 +134,8 @@ class WorkspaceWidget(QWidget):
         self.equation_editor = EquationEditorWidget(page, chart)
 
         # graphics view
-        #self.graph = QGraphicsView(self.scene)
         self.graph = ChartView(chart)
 
-        #todo: figure out what to do with the legend
-        #todo: add (0,0) axis lines
         chart.createDefaultAxes()
 
         # splitter layout
@@ -154,32 +151,20 @@ class WorkspaceWidget(QWidget):
         self.layout.addWidget(self.splitter)
 
 
-
-    # unlikely to be part of final implementation, 
-    # temporary for demo purposes
-    def set_image(self, image: QPixmap):
-        rect = self.graph.viewport().geometry()
-        # scaling currently still respects image aspect ratio
-        image = image.scaledToHeight(rect.height())
-        image = image.scaledToWidth(rect.width())
-
-        if len(self.scene.items()) != 0:
-            self.scene.removeItem(self.scene.items()[0])
-        self.img = image
-        self.scene.addPixmap(self.img)
-
 class TabContainerWidget(QWidget):
     def __init__(self, project: Project):
         super().__init__()
         self.project = project
 
         self.tabs = QTabWidget(self)
+        # tabs correspond to pages in the project datastructure
         for page in self.project.pages:
             self.tabs.addTab(WorkspaceWidget(page), page.name)
         self.tabs.setDocumentMode(True)
         self.tabs.setMovable(True)
         self.tabs.setTabsClosable(True)
 
+        # connect slots
         self.tabs.tabCloseRequested.connect(self.close_page)
         self.tabs.tabBarDoubleClicked.connect(self.tab_double_clicked)
 
@@ -196,6 +181,7 @@ class TabContainerWidget(QWidget):
         if index == -1:
             return
         
+        # rename the selected tab
         rename_dialog = PageRenameDialog(self.tabs.tabText(index))
         if rename_dialog.exec():
             name = rename_dialog.text_input.text().strip()
@@ -213,7 +199,7 @@ class MainWindow(QMainWindow):
     def __init__(self, widget: TabContainerWidget, project: Project):
         super().__init__()
         self.project = project
-        self.setWindowTitle("Name")
+        self.setWindowTitle("Graphing Calculator")
 
         # creating menu actions
         self.newFileAction = QAction("New Project", self)
