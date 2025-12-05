@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget, QMainWindow, QApplication, QHBoxLayout, QVBoxLayout, QSplitter, 
     QTableWidget, QTableWidgetItem, QHeaderView, QGraphicsView, QGraphicsScene, 
     QMenuBar, QFileDialog, QTabWidget, QDialog, QLabel, QLineEdit, QDialogButtonBox,
-    QListWidget, QListWidgetItem, QPushButton, QStyledItemDelegate
+    QListWidget, QListWidgetItem, QPushButton, QStyledItemDelegate, QMessageBox
     )
 
 from PySide6.QtCharts import (
@@ -81,6 +81,7 @@ class EquationEditorWidget(QWidget):
         self.layout.addLayout(self.table_layout)
         self.layout.addLayout(self.button_layout)
 
+        # connect slots
         self.table.itemChanged.connect(self.item_changed)
         self.add_equation_button.clicked.connect(self.add_clicked)
         self.remove_equation_button.clicked.connect(self.remove_clicked)
@@ -98,19 +99,15 @@ class EquationEditorWidget(QWidget):
     def item_changed(self, item: QTableWidgetItem):
         last_row = self.table.rowCount() - 1
         text = item.text().strip()
-        text_valid = len(text) > 0
 
-        if text_valid:
-            if item.row() == last_row:
-                self.add_equation(last_row + 1)
-                self.chart.add_line()
-            self.page.equations[item.row()] = text
-            self.page.function_trees[item.row()] = Function_tree(text)
+        if item.row() == last_row:
+            self.add_equation(last_row + 1)
+            self.chart.add_line()
+        self.page.equations[item.row()] = text
+        self.page.function_trees[item.row()] = Function_tree(text)
 
-        else:
-            self.chart.remove_line(item.row())
-
-        if (self.chart.series_list[item.row()] != ""):
+        if len(text) == 0 or self.chart.series_list[item.row()] != "":
+            # text empty or value changed
             self.chart.remove_line(item.row())
 
         self.chart.load_line(self.page, item.row())
@@ -260,21 +257,28 @@ class MainWindow(QMainWindow):
     def open_file(self):
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        #dialog.setNameFilter("Graph Projects (*.pkl)")
-        # dialog.setDirectory()
         fileName = ""
         if dialog.exec():
             fileName = dialog.selectedFiles()[0]
 
-        # The bug is in serialize.py and the fix is there
-        self.change_project(deserialize(fileName))
+        try:
+            # The bug is in serialize.py and the fix is there
+            self.change_project(deserialize(fileName))
+
+        except OSError as e:
+            #failed to load file data
+            QMessageBox.warning(self, "File Error", f"The file \"{fileName}\" could not be opened.")
 
     @Slot()
     def save_file(self):
         fileName = QFileDialog.getSaveFileName()
         
         # The bug is in serialize.py the fix is there
-        serialize(fileName[0], self.project)
+        try:
+            serialize(fileName[0], self.project)
+        except OSError:
+            QMessageBox.warning(self, "Cannot write file.", f"The file \"{fileName}\" could not be saved.")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

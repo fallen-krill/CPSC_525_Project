@@ -1,4 +1,5 @@
 import math
+
 class Function_tree:
 
     """
@@ -51,7 +52,7 @@ class Function_tree:
         """
 
         # Tree data structure
-        self.function = "error"
+        self.function = None
         self.arg1 = None
         self.arg2 = None
 
@@ -86,7 +87,6 @@ class Function_tree:
                 self.function = tokens[i][0]
                 self.arg1 = Function_tree(detokenize(tokens[0:i]))
                 self.arg2 = Function_tree(detokenize(tokens[i + 1 : len(tokens)]))
-                print(tokens)
                 return
 
             elif tokens[i-1] != "*" and tokens[i-1] != "/":
@@ -149,12 +149,12 @@ class Function_tree:
                 self.arg1 = None
                 self.arg2 = None
 
-                # if there is only one token and it is not defined
-                if (self.function not in set("+-*/^!") and not is_number(self.function)
-                    and self.function not in self.allowed_constants and self.function not in set("xyz")):
-                    self.function = "error"
-                    self.arg1 = None
-                    self.arg2 = None
+                # # if there is only one token and it is not defined
+                # if (self.function not in set("+-*/^!") and not is_number(self.function)
+                #     and self.function not in self.allowed_constants and self.function not in set("xyz")):
+                #     # self.function = "error"
+                #     # self.arg1 = None
+                #     # self.arg2 = None
                     
                 return
             
@@ -172,6 +172,8 @@ class Function_tree:
             return self.function + "(" + str(self.arg1) + ")"
         elif self.function != None:
             return self.function
+        elif self.function is None:
+            return "None"
         else:
             return "error"
 
@@ -182,7 +184,7 @@ class Function_tree:
         Return True if no "error" in function tree
         Otherwise, return false
         """
-        if self.function == "error":
+        if self.function is None:
             return False
 
         if self.arg1 == None and self.arg2 == None:
@@ -205,62 +207,60 @@ class Function_tree:
         If time, add support for y and z.
 
         Zero division errors and domain errors and stuff like that should be handled by graphics.
-        Simply don't graph x at such points.
+        Simply don't graph x at such points. May raise ValueError.
         """
-        try:
-            if self.arg1 == None and self.arg2 == None:
-                if is_number(self.function):
-                    return float(self.function)
-                elif self.function in self.allowed_constants:
-                    return self.allowed_constants[self.function]
-                elif self.function == 'x':
-                    return x
-                else:
-                    raise ValueError(self.function+" is not defined.")
+        if self.arg1 == None and self.arg2 == None:
+            if is_number(self.function):
+                return float(self.function)
+            elif self.function in self.allowed_constants:
+                return self.allowed_constants[self.function]
+            elif self.function == 'x':
+                return x
+            else:
+                raise ValueError(f"The input \"{self.function}\" is not defined.")
 
-            match self.function:
-                case '+':
-                    return self.arg1.evaluate(x) + self.arg2.evaluate(x)
-                case '-':
-                    return self.arg1.evaluate(x) - self.arg2.evaluate(x)
-                case '*':
-                    return self.arg1.evaluate(x) * self.arg2.evaluate(x)
-                case '/':
-                    return self.arg1.evaluate(x) / self.arg2.evaluate(x)
-                case '^':
-                    return self.arg1.evaluate(x) ** self.arg2.evaluate(x)
-                case '!': # We use gamma function in place of factorials
-                    return math.gamma(self.arg1.evaluate(x) + 1)
-                case "sin":
-                    return math.sin(self.arg1.evaluate(x))
-                case "cos":
-                    return math.cos(self.arg1.evaluate(x))
-                case "tan":
-                    return math.tan(self.arg1.evaluate(x))
-                case "csc":
-                    return 1.0/math.sin(self.arg1.evaluate(x))
-                case "sec":
-                    return 1.0/math.cos(self.arg1.evaluate(x))
-                case "cot":
-                    return 1.0/math.tan(self.arg1.evaluate(x))
-                case "asin":
-                    return math.asin(self.arg1.evaluate(x))
-                case "acos":
-                    return math.acos(self.arg1.evaluate(x))
-                case "atan":
-                    return math.atan(self.arg1.evaluate(x))
-                case "log":
-                    return math.log10(self.arg1.evaluate(x))
-                case "log_":
-                    return math.log(self.arg2.evaluate(x), self.arg1.evaluate(x))
-                case "ln":
-                    return math.log(self.arg1.evaluate(x), math.e)
-                case "sqrt":
-                    return math.sqrt(self.arg1.evaluate(x))
-                case _: # should never be reached
-                    raise ValueError(self.function+" is not defined at x="+str(x))
-        except Exception:
-            return None
+        match self.function:
+            case '+':
+                return self.arg1.evaluate(x) + self.arg2.evaluate(x)
+            case '-':
+                return self.arg1.evaluate(x) - self.arg2.evaluate(x)
+            case '*':
+                return self.arg1.evaluate(x) * self.arg2.evaluate(x)
+            case '/':
+                return self.arg1.evaluate(x) / self.arg2.evaluate(x)
+            case '^':
+                return self.arg1.evaluate(x) ** self.arg2.evaluate(x)
+            case '!': # We use gamma function in place of factorials
+                return math.gamma(self.arg1.evaluate(x) + 1)
+            case "sin":
+                return math.sin(self.arg1.evaluate(x))
+            case "cos":
+                return math.cos(self.arg1.evaluate(x))
+            case "tan":
+                return math.tan(self.arg1.evaluate(x))
+            case "csc":
+                return 1.0/math.sin(self.arg1.evaluate(x))
+            case "sec":
+                return 1.0/math.cos(self.arg1.evaluate(x))
+            case "cot":
+                return 1.0/math.tan(self.arg1.evaluate(x))
+            case "asin":
+                return math.asin(self.arg1.evaluate(x))
+            case "acos":
+                return math.acos(self.arg1.evaluate(x))
+            case "atan":
+                return math.atan(self.arg1.evaluate(x))
+            case "log":
+                return math.log10(self.arg1.evaluate(x))
+            case "log_":
+                return math.log(self.arg2.evaluate(x), self.arg1.evaluate(x))
+            case "ln":
+                return math.log(self.arg1.evaluate(x), math.e)
+            case "sqrt":
+                return math.sqrt(self.arg1.evaluate(x))
+            case _: # should never be reached
+                raise ValueError(f"The function \"{self.function}\" is not defined at x = {str(x)}.")
+
         return 0
 
 
@@ -622,50 +622,3 @@ def detokenize(tokens):
         input_string += (tokens[i] + " ")
 
     return input_string.strip(" ")
-
-    
-# For now, this is print debugging. You can test out expressions in stdin.
-def main():
-    #input_string = "(10log x+ (302 39 4.234 .23) 4.123 .5/2343)"
-
-    print("To exit, press ENTER without typing in a function.\n")
-
-    i = 1
-    input_string = input("f"+str(i)+"(x) = ")
-    
-    while input_string != "":
-
-
-        # print("Tokens: ",tokenize(input_string))
-        # print("Group factorials: ",group_factorials(tokenize(input_string)))
-        # print("Group factorials and exponents", group_exp_fact(tokenize(input_string)))
-        # print("Group functions: ",group_func_args(tokenize(input_string), Function_tree.allowed_functions)
-        function_tree = None
-        try:
-            function_tree = Function_tree(input_string)
-            print("\nFunction tree: ", str(function_tree), "\n")
-           
-        except ValueError as e:
-            print(e, "\n")
-        
-
-        print("Valid function: " + str(function_tree.is_valid()) + "\n")
-        if function_tree.is_valid():      
-            step = 0.1 * math.e
-            for x in range(-20, 21):
-                try:
-                    print("f"+str(i)+"("+str(step*x)+") = ", function_tree.evaluate(step*x))
-                except (ZeroDivisionError):
-                    print("not defined at x=", step*x)
-                except ValueError as e:
-                    print(e)
-                except TypeError as e:
-                    print("not defined at x=", step*x)
-
-        print("\n")
-        
-        i+=1
-        input_string = input("f"+str(i)+"(x) = ")
-
-if __name__ == "__main__":
-    main()

@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import (
-    QGesture, QGestureEvent
+    QGesture, QGestureEvent, QMessageBox
 )
 from PySide6.QtCore import (
     Qt, QEvent, QPointF, QRectF
@@ -76,6 +76,9 @@ class Chart(QChart):
 
     def load_line(self, page: Page, index: int):
         """Loads result of (precomputed) function tree onto the chart and to series_list at given index"""
+        if not page.function_trees[index].is_valid():
+            return
+
         #calculate series, add to chart
         try:
             #Function tree is passed, so evaluate it
@@ -107,7 +110,7 @@ class Chart(QChart):
             self.series_list[index] = series
 
         except ValueError as ve:
-            print("ValueError exception:", ve)
+            QMessageBox.warning(self.parent(), "Math Error", str(ve))
 
     def add_line(self):
         """Append entry to series_list"""
@@ -128,12 +131,10 @@ class Chart(QChart):
 
             
     def evaluate(self, func_tree: Function_tree, min_x=-10, min_y=-10, max_x=10, max_y=10):
-        """Evaluates func_tree at 1001 points along the x-axis and returns list of points."""
+        """Evaluates func_tree at 1001 points along the x-axis and returns list of points. May raise ValueError"""
         series_arr = []
         series = QLineSeries()
         points = []
-
-        col = series.color()
 
         #calculate 1000 points within range
         step = (max_x - min_x)/1000.00
@@ -181,7 +182,9 @@ class Chart(QChart):
 
         #reload each function
         for i in range(len(self.func_list)):
-
+            if not func_tree.is_valid():
+                return
+            
             #evaluate function tree again with new range
             equation = self.func_list[i]
             func_tree = Function_tree(equation)

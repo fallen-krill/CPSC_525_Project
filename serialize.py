@@ -8,7 +8,7 @@ from project import Project, Page
 def serialize(fname, data):
     """Serializes given data and saves it to a file given by fname as a path.
     The file will be overwritten if it already exists. Otherwise, a new file
-    is created.
+    is created. May raise.
     Returns 1 if write was successful
     Returns 0 otherwise"""
     
@@ -17,33 +17,20 @@ def serialize(fname, data):
     serialized_data = pickle.dumps(data)
 
     #write serialized data to file
-    try:
-        with open(fname, "wb") as f:
-            f.write(serialized_data)
-
-    #failed to write data
-    except OSError as e:
-        return 0
-
-    return 1
+    with open(fname, "wb") as f:
+        f.write(serialized_data)
 
 
 def deserialize(fname):
-    """deserializes data read from a file using pickle. Allows arbitrary code execution.
-    returns deserialized data if read was successful
-    returns None otherwise"""
+    """Deserializes data read from a file using pickle. May raise an OSError. Contains a bug allowing arbitrary code execution.
+    Returns deserialized data if read was successful
+    Returns None otherwise"""
     
-    try:
-        with open(fname, "rb") as f:
-            serialized_data = f.read()
+    with open(fname, "rb") as f:
+        serialized_data = f.read()
 
-        #convert pickled data to usable object
-        deserialized_data = pickle.loads(serialized_data, encoding="ASCII")
-
-    #failed to load file data
-    except OSError as e:
-        print(f"Cannot open file; {e}")
-        return
+    #convert pickled data to usable object
+    deserialized_data = pickle.loads(serialized_data, encoding="ASCII")
 
     return deserialized_data
 
