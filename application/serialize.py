@@ -41,36 +41,27 @@ def deserialize(fname):
 # THE FIX: (Comment out above two functions and uncomment functions below)--------------------------------------
 
 # def serialize(fname, project: Project):
-#     "Serialize project into 2D list with json.dump().
-#     "
+#     """Serialize project into 2D list with json.dump(). May raise exceptions during file opening."""
 #     eqn_list = []
 #     for i in range(len(project.pages)):
 #         eqn_list.append(project.pages[i].equations)
-#     try:
+
 #         with open(fname, "w") as f:
 #             json.dump(eqn_list, f)
-#     except OSError as e:
-#         exit(-1)
 
 
 # def deserialize(fname):
-#     """Deserialize with json.load() and parse as if it's a 2D list."""
-    
-#     try:
-#         with open(fname, "r") as f:
-#             deserialized_data = json.load(f)
+#     """Deserialize with json.load() and parse as if it's a 2D list. May raise exceptions during file writing."""
+#     with open(fname, "r") as f:
+#         deserialized_data = json.load(f)
 
-#             project = Project() # Create new project
-            
-#             for i in range(len(deserialized_data)):
-#                 project.add_page()
-#                 for j in range(len(deserialized_data[i])):
-#                     project.pages[i].add_equation_text(deserialized_data[i][j])
-#             return project
-
-#     except Exception as e:
-#         print(f"Bad file: {e}")
-#         exit(-1)
+#         project = Project() # Create new project
+        
+#         for i in range(len(deserialized_data)):
+#             project.add_page()
+#             for j in range(len(deserialized_data[i])):
+#                 project.pages[i].add_equation_text(deserialized_data[i][j])
+#         return project
 
 # End fix ------------------------------------------------------------------------------------------------------
             

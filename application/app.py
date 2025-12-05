@@ -255,21 +255,27 @@ class MainWindow(QMainWindow):
         if dialog.exec():
             fileName = dialog.selectedFiles()[0]
 
+        # if no file selected
+        if fileName == "":
+            return
+
         try:
             # The bug is in serialize.py and the fix is there
             self.change_project(deserialize(fileName))
 
-        except OSError as e:
+        except UnicodeDecodeError:
+            QMessageBox.warning(self, "File Error", f"The file \"{fileName}\" uses an invalid encoding.")
+        except Exception as e:
             #failed to load file data
             QMessageBox.warning(self, "File Error", f"The file \"{fileName}\" could not be opened.")
 
     @Slot()
     def save_file(self):
-        fileName = QFileDialog.getSaveFileName()
+        fileName = QFileDialog.getSaveFileName()[0]
         
         # The bug is in serialize.py the fix is there
         try:
-            serialize(fileName[0], self.project)
+            serialize(fileName, self.project)
         except OSError:
             QMessageBox.warning(self, "Cannot write file.", f"The file \"{fileName}\" could not be saved.")
 
