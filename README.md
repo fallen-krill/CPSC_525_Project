@@ -18,7 +18,7 @@ Supported functions:
 - Factorial (!)
 - Constants (pi, e)
 
-** Note on order of operations and valid input **
+**Note on order of operations and valid input**
 - It's as you would expect for BEDMAS, but between `()` and `^`, the order is `()`->`!`->`function evaluation`->`^`.
 - Essentially, this means that the `!` applies to what was immediately before it, and a `^` will evaluate after the function is computed.
 - For example: `cos x!` is `cos(x!)`, and `cos x^2` is `(cos x)^2`
