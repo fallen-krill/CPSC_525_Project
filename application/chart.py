@@ -189,7 +189,7 @@ class Chart(QChart):
             if not func_tree.is_valid():
                 continue # skip invalid functions
             
-            series = self.evaluate(func_tree)
+            series = self.evaluate(func_tree, x_min, y_min, x_max, y_max)
 
             color = QColor()
 
