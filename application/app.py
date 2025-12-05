@@ -195,9 +195,6 @@ class TabContainerWidget(QWidget):
         self.tabs.addTab(WorkspaceWidget(page), page.name)
         self.tabs.setCurrentIndex(self.tabs.count()-1)
 
-    @Slot()
-    def close_app(self):
-        sys.exit(0)
 
 class MainWindow(QMainWindow):
     def __init__(self, widget: TabContainerWidget, project: Project):
@@ -219,7 +216,7 @@ class MainWindow(QMainWindow):
         self.newPageAction.triggered.connect(widget.add_page)
 
         self.closeAction = QAction("Exit", self)
-        self.closeAction.triggered.connect(widget.close_app)
+        self.closeAction.triggered.connect(self.close_app)
         
         # creating menu bar
         menu = self.menuBar()
@@ -278,6 +275,10 @@ class MainWindow(QMainWindow):
             serialize(fileName, self.project)
         except OSError:
             QMessageBox.warning(self, "Cannot write file.", f"The file \"{fileName}\" could not be saved.")
+
+    @Slot()
+    def close_app(self):
+        sys.exit(0)
 
 
 if __name__ == "__main__":
