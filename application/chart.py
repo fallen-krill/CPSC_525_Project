@@ -185,7 +185,7 @@ class Chart(QChart):
             #evaluate function tree again with new range
             equation = self.func_list[i]
             func_tree = Function_tree(equation)
-            series = self.evaluate(func_tree)
+            series = self.evaluate(func_tree, x_min, y_min, x_max, y_max)
 
             color = QColor()
 
