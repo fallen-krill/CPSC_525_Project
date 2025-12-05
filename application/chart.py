@@ -142,7 +142,7 @@ class Chart(QChart):
             x = min_x + i*step
             y = func_tree.evaluate(x)
 
-            if y != None:
+            if y != float("nan"):
                 #Check that asymptote was passed first
                 if (len(points) > 0):
                     #We can tell if an asymptote was passed if this number is very high and is negative
