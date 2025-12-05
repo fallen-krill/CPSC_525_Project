@@ -73,7 +73,10 @@ class Function_tree:
         for i in range(len(tokens)-1, -1, -1):
             if tokens[i] in set("+-"):
                 self.function = tokens[i]
-                self.arg1 = Function_tree(detokenize(tokens[0:i]))
+                if i != 0:
+                    self.arg1 = Function_tree(detokenize(tokens[0:i]))
+                else:
+                    self.arg1 = Function_tree("0")
                 self.arg2 = Function_tree(detokenize(tokens[i+1: len(tokens)]))
 
                 return
@@ -295,7 +298,7 @@ def validate_input(input_string):
     valid_characters = set("abcdefghijklmnopqrstuvwxyz .0987654321()+-*/^!_")
     if not(set(input_string).issubset(valid_characters)):
         return False
-    if (input_string[0] not in set("abcdefghijklmnopqrstuvwxyz. 1234567890(+/")):
+    if (input_string[0] not in set("abcdefghijklmnopqrstuvwxyz. 1234567890(+-")):
         return False
     # ensure bracket depth is 0 at the end of the string
     bracket_depth = 0
