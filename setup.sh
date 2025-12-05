@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Has to be run from main project directory
+python3 -m venv ./venv
 source venv/bin/activate
-python3 application/app.py
+pip install PySide6
 deactivate

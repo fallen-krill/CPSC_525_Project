@@ -216,6 +216,7 @@ class MainWindow(QMainWindow):
         self.newPageAction.triggered.connect(widget.add_page)
 
         self.closeAction = QAction("Close Window", self)
+
         self.closeAction.triggered.connect(self.close_app)
         
         # creating menu bar

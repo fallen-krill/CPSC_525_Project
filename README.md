@@ -22,6 +22,7 @@ Supported functions:
 - It's as you would expect for BEDMAS, but between `()` and `^`, the order is `()`->`!`->`function evaluation`->`^`.
 - Essentially, this means that the `!` applies to what was immediately before it, and a `^` will evaluate after the function is computed.
 - For example: `cos x!` is `cos(x!)`, and `cos x^2` is `(cos x)^2`
+- Also, stuff like `cos 4x` will be `(cos 4)x` since function evaluation is before multiplication.
 - You do not need to enter brackets; the application is able to tell when juxtaposition is multiplication and when it's an argument.
 - Similarly to LaTeX commands, purely alphabetical strings will be considered as one token, so `cosx` is nonsense, but `cos x` is fine.
 
@@ -59,7 +60,7 @@ $ python3 ./application/app.py
 or
 ```
 $ cd application
-$ python3\ app.py
+$ python3 app.py
 ```
 
 **Option 2: Running through a virtual environment**
@@ -69,9 +70,11 @@ If you cannot install PySide6 directly using pip, as is the case on some Linux d
 The simplest way to do this is
 ```
 cd CPSC_525_Project
+./setup.sh
 ./run.sh
 ```
-You may have to give it execute permissions, and this script will only work if it is run from the project's main directory.
+You may have to give them execute permissions, and this script will only work if it is run from the project's main directory.  
+`setup.sh` only needs to be executed once.
 
 You can run it using a virtual environment, manually, as follows:
 ```
