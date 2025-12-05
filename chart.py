@@ -11,7 +11,7 @@ from PySide6.QtGui import (
     QMouseEvent, QKeyEvent, QColor
 )
 from project import Page
-from function_tree import Function_tree
+from function_tree import Function_tree, ParsingError
 
 class Chart(QChart):
     def __init__(self):
@@ -109,7 +109,7 @@ class Chart(QChart):
             self.func_list[index] = page.equations[index]
             self.series_list[index] = series
 
-        except ValueError as ve:
+        except ParsingError as ve:
             QMessageBox.warning(self.parent(), "Math Error", str(ve))
 
     def add_line(self):
@@ -182,12 +182,13 @@ class Chart(QChart):
 
         #reload each function
         for i in range(len(self.func_list)):
-            if not func_tree.is_valid():
-                return
             
             #evaluate function tree again with new range
             equation = self.func_list[i]
             func_tree = Function_tree(equation)
+            if not func_tree.is_valid():
+                continue # skip invalid functions
+            
             series = self.evaluate(func_tree)
 
             color = QColor()

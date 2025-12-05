@@ -1,5 +1,7 @@
 import math
 
+class ParsingError(ValueError): ...
+
 class Function_tree:
 
     """
@@ -206,61 +208,70 @@ class Function_tree:
         Evaluates the function at a given x.
         If time, add support for y and z.
 
-        Zero division errors and domain errors and stuff like that should be handled by graphics.
-        Simply don't graph x at such points. May raise ValueError.
+        Will return nan on values not in the domain of the given function. Will 
+        raise ParsingError when an undefined value is found in the function tree.
         """
-        if self.arg1 == None and self.arg2 == None:
-            if is_number(self.function):
-                return float(self.function)
-            elif self.function in self.allowed_constants:
-                return self.allowed_constants[self.function]
-            elif self.function == 'x':
-                return x
-            else:
-                raise ValueError(f"The input \"{self.function}\" is not defined.")
+        try:
+            if self.arg1 == None and self.arg2 == None:
+                if is_number(self.function):
+                    return float(self.function)
+                elif self.function in self.allowed_constants:
+                    return self.allowed_constants[self.function]
+                elif self.function == 'x':
+                    return x
+                else:
+                    raise ParsingError(f"The input \"{self.function}\" is not defined.")
 
-        match self.function:
-            case '+':
-                return self.arg1.evaluate(x) + self.arg2.evaluate(x)
-            case '-':
-                return self.arg1.evaluate(x) - self.arg2.evaluate(x)
-            case '*':
-                return self.arg1.evaluate(x) * self.arg2.evaluate(x)
-            case '/':
-                return self.arg1.evaluate(x) / self.arg2.evaluate(x)
-            case '^':
-                return self.arg1.evaluate(x) ** self.arg2.evaluate(x)
-            case '!': # We use gamma function in place of factorials
-                return math.gamma(self.arg1.evaluate(x) + 1)
-            case "sin":
-                return math.sin(self.arg1.evaluate(x))
-            case "cos":
-                return math.cos(self.arg1.evaluate(x))
-            case "tan":
-                return math.tan(self.arg1.evaluate(x))
-            case "csc":
-                return 1.0/math.sin(self.arg1.evaluate(x))
-            case "sec":
-                return 1.0/math.cos(self.arg1.evaluate(x))
-            case "cot":
-                return 1.0/math.tan(self.arg1.evaluate(x))
-            case "asin":
-                return math.asin(self.arg1.evaluate(x))
-            case "acos":
-                return math.acos(self.arg1.evaluate(x))
-            case "atan":
-                return math.atan(self.arg1.evaluate(x))
-            case "log":
-                return math.log10(self.arg1.evaluate(x))
-            case "log_":
-                return math.log(self.arg2.evaluate(x), self.arg1.evaluate(x))
-            case "ln":
-                return math.log(self.arg1.evaluate(x), math.e)
-            case "sqrt":
-                return math.sqrt(self.arg1.evaluate(x))
-            case _: # should never be reached
-                raise ValueError(f"The function \"{self.function}\" is not defined at x = {str(x)}.")
-
+            match self.function:
+                case '+':
+                    return self.arg1.evaluate(x) + self.arg2.evaluate(x)
+                case '-':
+                    return self.arg1.evaluate(x) - self.arg2.evaluate(x)
+                case '*':
+                    return self.arg1.evaluate(x) * self.arg2.evaluate(x)
+                case '/':
+                    return self.arg1.evaluate(x) / self.arg2.evaluate(x)
+                case '^':
+                    return self.arg1.evaluate(x) ** self.arg2.evaluate(x)
+                case '!': # We use gamma function in place of factorials
+                    return math.gamma(self.arg1.evaluate(x) + 1)
+                case "sin":
+                    return math.sin(self.arg1.evaluate(x))
+                case "cos":
+                    return math.cos(self.arg1.evaluate(x))
+                case "tan":
+                    return math.tan(self.arg1.evaluate(x))
+                case "csc":
+                    return 1.0/math.sin(self.arg1.evaluate(x))
+                case "sec":
+                    return 1.0/math.cos(self.arg1.evaluate(x))
+                case "cot":
+                    return 1.0/math.tan(self.arg1.evaluate(x))
+                case "asin":
+                    return math.asin(self.arg1.evaluate(x))
+                case "acos":
+                    return math.acos(self.arg1.evaluate(x))
+                case "atan":
+                    return math.atan(self.arg1.evaluate(x))
+                case "log":
+                    return math.log10(self.arg1.evaluate(x))
+                case "log_":
+                    return math.log(self.arg2.evaluate(x), self.arg1.evaluate(x))
+                case "ln":
+                    return math.log(self.arg1.evaluate(x), math.e)
+                case "sqrt":
+                    return math.sqrt(self.arg1.evaluate(x))
+                case _: # should never be reached
+                    raise ParsingError(f"The function \"{self.function}\" is not defined at x = {str(x)}.")
+        except ValueError as ve:
+            # if bad input was given report that to the caller
+            if isinstance(ve, ParsingError):
+                raise ve
+            
+            # a graphing calculator shouldn't give up when calculating functions outside of their domain, so return nan
+            return math.nan 
+        except ZeroDivisionError as ze:
+            print("Zero division")
         return 0
 
 
