@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
     QWidget, QMainWindow, QApplication, QHBoxLayout, QVBoxLayout, QSplitter, 
     QTableWidget, QTableWidgetItem, QHeaderView, QGraphicsView, QGraphicsScene, 
     QMenuBar, QFileDialog, QTabWidget, QDialog, QLabel, QLineEdit, QDialogButtonBox,
-    QListWidget, QListWidgetItem, QPushButton, QStyledItemDelegate
+    QListWidget, QListWidgetItem, QPushButton, QStyledItemDelegate, QMessageBox
     )
 
 from PySide6.QtCharts import (
@@ -80,6 +80,7 @@ class EquationEditorWidget(QWidget):
         self.layout.addLayout(self.table_layout)
         self.layout.addLayout(self.button_layout)
 
+        # connect slots
         self.table.itemChanged.connect(self.item_changed)
         self.add_equation_button.clicked.connect(self.add_clicked)
         self.remove_equation_button.clicked.connect(self.remove_clicked)
@@ -97,19 +98,15 @@ class EquationEditorWidget(QWidget):
     def item_changed(self, item: QTableWidgetItem):
         last_row = self.table.rowCount() - 1
         text = item.text().strip()
-        text_valid = len(text) > 0
 
-        if text_valid:
-            if item.row() == last_row:
-                self.add_equation(last_row + 1)
-                self.chart.add_line()
-            self.page.equations[item.row()] = text
-            self.page.function_trees[item.row()] = Function_tree(text)
+        if item.row() == last_row:
+            self.add_equation(last_row + 1)
+            self.chart.add_line()
+        self.page.equations[item.row()] = text
+        self.page.function_trees[item.row()] = Function_tree(text)
 
-        else:
-            self.chart.remove_line(item.row())
-
-        if (self.chart.series_list[item.row()] != ""):
+        if len(text) == 0 or self.chart.series_list[item.row()] != "":
+            # text empty or value changed
             self.chart.remove_line(item.row())
 
         self.chart.load_line(self.page, item.row())
@@ -126,6 +123,7 @@ class EquationEditorWidget(QWidget):
 
 
 class WorkspaceWidget(QWidget):
+    """Holds equation editor and graph in a splitter."""
     def __init__(self, page: Page):
         super().__init__()
         self.page = page
@@ -136,11 +134,8 @@ class WorkspaceWidget(QWidget):
         self.equation_editor = EquationEditorWidget(page, chart)
 
         # graphics view
-        #self.graph = QGraphicsView(self.scene)
         self.graph = ChartView(chart)
 
-        #todo: figure out what to do with the legend
-        #todo: add (0,0) axis lines
         chart.createDefaultAxes()
 
         # splitter layout
@@ -156,32 +151,20 @@ class WorkspaceWidget(QWidget):
         self.layout.addWidget(self.splitter)
 
 
-
-    # unlikely to be part of final implementation, 
-    # temporary for demo purposes
-    def set_image(self, image: QPixmap):
-        rect = self.graph.viewport().geometry()
-        # scaling currently still respects image aspect ratio
-        image = image.scaledToHeight(rect.height())
-        image = image.scaledToWidth(rect.width())
-
-        if len(self.scene.items()) != 0:
-            self.scene.removeItem(self.scene.items()[0])
-        self.img = image
-        self.scene.addPixmap(self.img)
-
 class TabContainerWidget(QWidget):
     def __init__(self, project: Project):
         super().__init__()
         self.project = project
 
         self.tabs = QTabWidget(self)
+        # tabs correspond to pages in the project datastructure
         for page in self.project.pages:
             self.tabs.addTab(WorkspaceWidget(page), page.name)
         self.tabs.setDocumentMode(True)
         self.tabs.setMovable(True)
         self.tabs.setTabsClosable(True)
 
+        # connect slots
         self.tabs.tabCloseRequested.connect(self.close_page)
         self.tabs.tabBarDoubleClicked.connect(self.tab_double_clicked)
 
@@ -198,6 +181,7 @@ class TabContainerWidget(QWidget):
         if index == -1:
             return
         
+        # rename the selected tab
         rename_dialog = PageRenameDialog(self.tabs.tabText(index))
         if rename_dialog.exec():
             name = rename_dialog.text_input.text().strip()
@@ -219,7 +203,7 @@ class MainWindow(QMainWindow):
     def __init__(self, widget: TabContainerWidget, project: Project):
         super().__init__()
         self.project = project
-        self.setWindowTitle("Name")
+        self.setWindowTitle("Graphing Calculator")
 
         # creating menu actions
         self.newFileAction = QAction("New Project", self)
@@ -267,21 +251,34 @@ class MainWindow(QMainWindow):
     def open_file(self):
         dialog = QFileDialog(self)
         dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        #dialog.setNameFilter("Graph Projects (*.pkl)")
-        # dialog.setDirectory()
         fileName = ""
         if dialog.exec():
             fileName = dialog.selectedFiles()[0]
 
-        # The bug is in serialize.py and the fix is there
-        self.change_project(deserialize(fileName))
+        # if no file selected
+        if fileName == "":
+            return
+
+        try:
+            # The bug is in serialize.py and the fix is there
+            self.change_project(deserialize(fileName))
+
+        except UnicodeDecodeError:
+            QMessageBox.warning(self, "File Error", f"The file \"{fileName}\" uses an invalid encoding.")
+        except Exception as e:
+            #failed to load file data
+            QMessageBox.warning(self, "File Error", f"The file \"{fileName}\" could not be opened.")
 
     @Slot()
     def save_file(self):
-        fileName = QFileDialog.getSaveFileName()
+        fileName = QFileDialog.getSaveFileName()[0]
         
         # The bug is in serialize.py the fix is there
-        serialize(fileName[0], self.project)
+        try:
+            serialize(fileName, self.project)
+        except OSError:
+            QMessageBox.warning(self, "Cannot write file.", f"The file \"{fileName}\" could not be saved.")
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
