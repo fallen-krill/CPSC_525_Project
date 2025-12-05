@@ -208,7 +208,7 @@ class Function_tree:
         Evaluates the function at a given x.
         If time, add support for y and z.
 
-        Will return nan on values not in the domain of the given function. Will 
+        Will return None on values not in the domain of the given function. Will 
         raise ParsingError when an undefined value is found in the function tree.
         """
         try:
@@ -268,10 +268,10 @@ class Function_tree:
             if isinstance(ve, ParsingError):
                 raise ve
             
-            # a graphing calculator shouldn't give up when calculating functions outside of their domain, so return nan
-            return math.nan 
+            # a graphing calculator shouldn't give up when calculating functions outside of their domain, so return None
+            return None 
         except ZeroDivisionError as ze:
-            print("Zero division")
+            return None # again we don't throw an exception when functions can't evaluate on certain values
         return 0
 
 
