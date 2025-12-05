@@ -49,11 +49,9 @@ The server, `demo/exfil-receiver.py`, can be run at any time, and will wait inde
 
 **Option 1: Running directly (Not applicable to university Linux servers)**
 
-To run the application, PySide6 must first be installed.
-```
-$ pip install PySide6
-```
-Then, run app.py.
+To run the application, PySide6 must first be installed. How to do this varies by operating system and/or distro.
+
+Then, assuming you're in the main project directory, run `app.py` as follows:
 ```
 $ python3 ./application/app.py
 ```
@@ -67,13 +65,15 @@ $ python3 app.py
 
 If you cannot install PySide6 directly using pip, as is the case on some Linux distributions and the MS computers, you can instead create a virtual environment.
 
-The simplest way to do this is
+The simplest way to do this is run the following commands after cloning the repository:
 ```
 cd CPSC_525_Project
 ./setup.sh
 ./run.sh
 ```
-You may have to give them execute permissions, and this script will only work if it is run from the project's main directory.  
+
+You may have to give them execute permissions, and both these scripts will only work if they are run from the project's main directory.  
+
 `setup.sh` only needs to be executed once.
 
 You can run it using a virtual environment, manually, as follows:
@@ -84,6 +84,12 @@ $ source venv/bin/activate
 (venv) $ pip install PySide6
 (venv) $ python3 application/app.py
 ```
+Then once you're done, type
+```
+deactivate
+```
+to exit the python virtual environment.
+
 ---
 ### Running the Attack Code
 
