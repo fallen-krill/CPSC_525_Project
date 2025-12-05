@@ -82,7 +82,7 @@ class Chart(QChart):
         #calculate series, add to chart
         try:
             #Function tree is passed, so evaluate it
-            series = self.evaluate(page.function_trees[index])
+            series = self.evaluate(page.function_trees[index], self.x_min, self.y_min, self.x_max, self.y_max)
             
             #add series to chart and set axes
             for s in series:
