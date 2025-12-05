@@ -142,7 +142,8 @@ class Chart(QChart):
             x = min_x + i*step
             y = func_tree.evaluate(x)
 
-            if y != float("nan"):
+            # check if y is nan
+            if y == y:
                 #Check that asymptote was passed first
                 if (len(points) > 0):
                     #We can tell if an asymptote was passed if this number is very high and is negative
@@ -156,7 +157,7 @@ class Chart(QChart):
 
                 points.append(QPointF(x, y))
 
-            #Value returned was None, meaning it attempted to evaluate at undefined value
+            #Value returned was NaN, meaning it attempted to evaluate at undefined value
             elif (len(points) > 0):
                 series.append(points)
                 series_arr.append(series)

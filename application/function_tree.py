@@ -271,7 +271,7 @@ class Function_tree:
             # a graphing calculator shouldn't give up when calculating functions outside of their domain, so return None
             return float("nan")
         except ZeroDivisionError as ze:
-            return None # again we don't throw an exception when functions can't evaluate on certain values
+            return float("nan") # again we don't throw an exception when functions can't evaluate on certain values
         return 0
 
 
