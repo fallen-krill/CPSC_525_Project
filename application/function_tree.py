@@ -272,6 +272,8 @@ class Function_tree:
             return float("nan")
         except ZeroDivisionError as ze:
             return float("nan") # again we don't throw an exception when functions can't evaluate on certain values
+        except OverflowError:
+            return float("nan")
         return 0
 
 
